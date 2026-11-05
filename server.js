@@ -12,16 +12,29 @@ app.use(express.static(path.join(__dirname)));
 
 const MCH_ID = process.env.WPAY_MCH_ID || "5375";
 const API_SECRET = process.env.WPAY_API_SECRET;
-const BASE_URL = (process.env.WPAY_BASE_URL || "https://api.wpay.life").trim().replace(/\/+$/, "");
-const PUBLIC_URL = (process.env.PUBLIC_URL || "").trim().replace(/\/+$/, "");
+const BASE_URL = (process.env.WPAY_BASE_URL || "https://api.wpay.life")
+  .trim()
+  .replace(/\/+$/, "");
+const PUBLIC_URL = (process.env.PUBLIC_URL || "")
+  .trim()
+  .replace(/\/+$/, "");
 
-if (!API_SECRET) console.warn("Missing WPAY_API_SECRET");
+if (!API_SECRET) {
+  console.warn("Missing WPAY_API_SECRET");
+}
 
+// Firebase setup
 if (!admin.apps.length) {
+  const privateKey = [
+    process.env.FIREBASE_PRIVATE_KEY_1 || "",
+    process.env.FIREBASE_PRIVATE_KEY_2 || "",
+    process.env.FIREBASE_PRIVATE_KEY_3 || ""
+  ].join("").replace(/\\n/g, "\n");
+
   const serviceAccount = {
     project_id: process.env.FIREBASE_PROJECT_ID,
     client_email: process.env.FIREBASE_CLIENT_EMAIL,
-    private_key: (process.env.FIREBASE_PRIVATE_KEY || "").replace(/\\n/g, "\n")
+    private_key: privateKey
   };
 
   if (
@@ -43,30 +56,46 @@ const db = admin.database();
 
 function sign(params) {
   const text = Object.keys(params)
-    .filter(k => k !== "sign" && params[k] !== undefined && params[k] !== null && params[k] !== "")
+    .filter(
+      k =>
+        k !== "sign" &&
+        params[k] !== undefined &&
+        params[k] !== null &&
+        params[k] !== ""
+    )
     .sort()
     .map(k => `${k}=${params[k]}`)
     .join("&") + `&key=${API_SECRET}`;
 
-  return crypto.createHash("md5").update(text, "utf8").digest("hex").toLowerCase();
+  return crypto
+    .createHash("md5")
+    .update(text, "utf8")
+    .digest("hex")
+    .toLowerCase();
 }
 
 function safeEqual(a, b) {
   const x = Buffer.from(String(a || "").toLowerCase());
   const y = Buffer.from(String(b || "").toLowerCase());
+
   return x.length === y.length && crypto.timingSafeEqual(x, y);
 }
 
 function methodCode(method) {
-  return ({ bkash: "BKASH", nagad: "NAGAD", rocket: "ROCKET" })[
-    String(method).toLowerCase()
-  ];
+  return {
+    bkash: "BKASH",
+    nagad: "NAGAD",
+    rocket: "ROCKET"
+  }[String(method).toLowerCase()];
 }
 
+// Create WPAY payment
 app.post("/api/wpay/collect", async (req, res) => {
   try {
     if (!API_SECRET) {
-      return res.status(503).json({ message: "WPAY not configured" });
+      return res.status(503).json({
+        message: "WPAY not configured"
+      });
     }
 
     const { userPhone, amount, method } = req.body || {};
@@ -74,13 +103,20 @@ app.post("/api/wpay/collect", async (req, res) => {
     const pay_type = methodCode(method);
 
     if (!userPhone || !Number.isFinite(money) || money < 500 || !pay_type) {
-      return res.status(400).json({ message: "Invalid deposit request" });
+      return res.status(400).json({
+        message: "Invalid deposit request"
+      });
     }
 
-    const userSnap = await db.ref("users").child(String(userPhone)).once("value");
+    const userSnap = await db
+      .ref("users")
+      .child(String(userPhone))
+      .once("value");
 
     if (!userSnap.exists() || userSnap.val().isBanned) {
-      return res.status(403).json({ message: "User not allowed" });
+      return res.status(403).json({
+        message: "User not allowed"
+      });
     }
 
     const out_trade_no =
@@ -109,7 +145,9 @@ app.post("/api/wpay/collect", async (req, res) => {
 
     const response = await fetch(`${BASE_URL}/v1/Collect`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify(order)
     });
 
@@ -134,32 +172,54 @@ app.post("/api/wpay/collect", async (req, res) => {
       paymentUrl: data.data.url,
       orderId: out_trade_no
     });
-
   } catch (e) {
     console.error("WPAY collect error", e);
-    return res.status(500).json({ message: "Could not create payment" });
+
+    return res.status(500).json({
+      message: "Could not create payment"
+    });
   }
 });
 
+// WPAY payment notification
 app.post("/api/wpay/notify", async (req, res) => {
   try {
     const payload = req.body || {};
 
-    if (!API_SECRET || !payload.sign || !safeEqual(sign(payload), payload.sign)) {
+    if (
+      !API_SECRET ||
+      !payload.sign ||
+      !safeEqual(sign(payload), payload.sign)
+    ) {
       return res.status(400).send("fail");
     }
 
     const orderNo = payload.out_trade_no;
-    const orderRef = db.ref("wpay_orders").child(String(orderNo));
+
+    const orderRef = db
+      .ref("wpay_orders")
+      .child(String(orderNo));
+
     const snap = await orderRef.once("value");
 
-    if (!snap.exists()) return res.status(404).send("fail");
+    if (!snap.exists()) {
+      return res.status(404).send("fail");
+    }
 
     const order = snap.val();
+
     const status = String(
-      payload.status ?? payload.trade_status ?? payload.pay_status ?? ""
+      payload.status ??
+      payload.trade_status ??
+      payload.pay_status ??
+      ""
     );
-    const paidAmount = Number(payload.money ?? payload.amount ?? payload.total_fee);
+
+    const paidAmount = Number(
+      payload.money ??
+      payload.amount ??
+      payload.total_fee
+    );
 
     if (status !== "1" || paidAmount !== Number(order.amount)) {
       return res.status(400).send("fail");
@@ -169,23 +229,33 @@ app.post("/api/wpay/notify", async (req, res) => {
       return res.status(200).send("success");
     }
 
-    const userRef = db.ref("users").child(order.userPhone);
+    const userRef = db
+      .ref("users")
+      .child(order.userPhone);
 
     await userRef.transaction(user => {
       if (!user) return;
 
       user.deposits = user.deposits || {};
 
-      if (Object.values(user.deposits).some(d => d.out_trade_no === orderNo)) {
+      if (
+        Object.values(user.deposits).some(
+          d => d.out_trade_no === orderNo
+        )
+      ) {
         return user;
       }
 
-      user.balance = Number(user.balance || 0) + Number(order.amount);
+      user.balance =
+        Number(user.balance || 0) + Number(order.amount);
 
       user.deposits[orderNo] = {
         amount: Number(order.amount),
         method: order.method,
-        trxId: payload.transaction_Id || payload.trade_no || orderNo,
+        trxId:
+          payload.transaction_Id ||
+          payload.trade_no ||
+          orderNo,
         out_trade_no: orderNo,
         status: "সফল",
         date: new Date().toLocaleDateString("bn-BD"),
@@ -202,14 +272,16 @@ app.post("/api/wpay/notify", async (req, res) => {
     });
 
     return res.status(200).send("success");
-
   } catch (e) {
     console.error("WPAY notify error", e);
+
     return res.status(500).send("fail");
   }
 });
 
-app.get("/health", (_, res) => res.json({ ok: true }));
+app.get("/health", (_, res) => {
+  res.json({ ok: true });
+});
 
 const port = process.env.PORT || 8080;
 
