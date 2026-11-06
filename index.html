@@ -19,16 +19,16 @@
 
     <style>
       :root {
-        --bg-main: #f3edff;          
-        --bg-card: #ffffff;          
-        --bg-subcard: #eee7ff;       
+        --bg-main: #eee6ff;          
+        --bg-card: #fbf9ff;          
+        --bg-subcard: #e4d8ff;       
         --primary-red: #2563eb;     
         --sweet-red: #7c3aed;       
         --sweet-peach: #ede9fe;      
         --red-glow: rgba(124, 58, 237, 0.20);
         --text-dark: #111111;        
         --text-muted: #666666;       
-        --border-color: #d9c8ff;     
+        --border-color: #c8b3f5;     
         --bkash-color: #e2125d;
         --nagad-color: #f55a14;
       }
@@ -43,7 +43,7 @@
       html, body {
         width: 100%;
         min-height: 100vh;
-        background-color: #f0f2f5;
+        background: radial-gradient(circle at top, #f7f2ff 0%, #e9ddff 48%, #ddd0fa 100%);
         color: var(--text-dark);
         font-family: 'Hind Siliguri', sans-serif;
         overflow-x: hidden;
@@ -221,9 +221,9 @@
 
       .btn-main {
         width: 100%;
-        background: var(--primary-red);
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
         color: #ffffff;
-        border: none;
+        border: 2px solid #1e40af;
         padding: 12px;
         border-radius: 10px;
         font-size: 16px;
@@ -238,9 +238,20 @@
         transform: scale(0.98);
       }
 
+      .btn-main,
+      button:not(.close-btn):not(.nav-item):not(.voice-btn) {
+        outline: none;
+      }
+
+      .btn-main:hover,
+      .modal-btn:hover,
+      .action-card:hover .action-icon-box {
+        border-color: #1d4ed8;
+      }
+
       /* হেডার এবং ভয়েস কন্ট্রোল বাটন */
       .app-header {
-        background-color: var(--bg-card);
+        background: linear-gradient(135deg, #fbf9ff 0%, #efe7ff 100%);
         padding: 12px 16px;
         display: flex;
         justify-content: space-between;
@@ -1108,22 +1119,25 @@
       .modal-btn {
         flex: 1;
         padding: 11px;
-        border-radius: 8px;
+        border-radius: 10px;
         font-family: 'Hind Siliguri', sans-serif;
         font-weight: 800;
         font-size: 14px;
         cursor: pointer;
-        border: none;
+        border: 2px solid transparent;
       }
 
       .modal-btn-confirm {
-        background: var(--primary-red);
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        border-color: #1e40af;
         color: #ffffff;
+        box-shadow: 0 5px 14px rgba(37,99,235,.22);
       }
 
       .modal-btn-cancel {
-        background: #f0f0f0;
-        color: var(--text-dark);
+        background: #efe7ff;
+        border-color: #b99ce8;
+        color: #3b246b;
       }
 
       .alert-popup {
@@ -3211,6 +3225,13 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
       renderTransactionHistory();
     }
 
+    function normalizeStatus(status) {
+      const s = String(status ?? '').trim().toLowerCase();
+      if (['approved','success','successful','paid','completed','সম্পন্ন','সফল','অনুমোদিত','টাকা পাঠানো হয়েছে','1'].includes(s)) return 'success';
+      if (['rejected','failed','cancelled','canceled','বাতিল','ব্যর্থ','2'].includes(s)) return 'failed';
+      return 'pending';
+    }
+
     function renderTransactionHistory() {
       const container = document.getElementById('historyListContainer');
       if (!container || !currentUser) return;
@@ -3251,7 +3272,7 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
 
       list.forEach(item => {
         const statusKey = normalizeStatus(item.status);
-        const statusText = item.status || (statusKey === 'pending' ? 'অপেক্ষমাণ' : statusKey === 'success' ? 'সম্পন্ন' : 'ব্যর্থ');
+        const statusText = statusKey === 'success' ? 'সফল' : statusKey === 'failed' ? 'বাতিল' : (item.status || 'অপেক্ষমাণ');
         const statusColor = statusKey === 'success' ? '#218838' : statusKey === 'failed' ? '#dc3545' : '#b7791f';
         const el = document.createElement('div');
         el.className = 'history-record';
