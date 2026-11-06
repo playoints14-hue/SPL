@@ -1808,12 +1808,12 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
         <div id="withdrawScheduleText" style="font-size:11px; color:var(--primary-red); font-weight:bold; margin-bottom:8px;">* উত্তোলন সময়: সকাল ৯:০০ টা থেকে রাত ১০:০০ টা</div>
         <div id="savedAccountDetails" style="font-size: 12px; color: #2ecc71; font-weight: 800; margin-bottom: 12px; background: #e8f5e9; padding: 8px; border-radius: 8px;"></div>
         
-        <input type="number" id="withdrawInput" class="modal-input-field" placeholder="উত্তোলনের পরিমাণ (সর্বনিম্ন ১০০ টাকা)" oninput="calculateWithdrawFee()" />
+        <input type="number" id="withdrawInput" class="modal-input-field" placeholder="উত্তোলনের পরিমাণ" oninput="calculateWithdrawFee()" />
         <input type="password" id="withdrawLoginPassword" class="modal-input-field" placeholder="লগইন পাসওয়ার্ড দিন" autocomplete="current-password" required />
         
         <div class="fee-box-info" id="withdrawFeeCalcBox">
           <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-            <span id="withdrawFeeLabel">উত্তোলন ফি (৫%):</span>
+            <span id="withdrawFeeLabel">উত্তোলন ফি:</span>
             <strong style="color:var(--primary-red);" id="withdrawFeeAmt">৳ 0.00</strong>
           </div>
           <div style="display:flex; justify-content:space-between; border-top:1px dashed #90caf9; padding-top:4px;">
@@ -2340,6 +2340,11 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
       if (withdrawScheduleText) withdrawScheduleText.textContent = `* উত্তোলন সময়: ${formatWithdrawalTime(window.splWithdrawStart)} থেকে ${formatWithdrawalTime(window.splWithdrawEnd)}`;
       const withdrawFeeLabel = document.getElementById('withdrawFeeLabel');
       if (withdrawFeeLabel) withdrawFeeLabel.textContent = `উত্তোলন ফি (${window.splWithdrawalFeePercent}%):`;
+      const withdrawInput = document.getElementById('withdrawInput');
+      if (withdrawInput) {
+        withdrawInput.min = String(window.splMinimumWithdrawal);
+        withdrawInput.placeholder = `উত্তোলনের পরিমাণ (সর্বনিম্ন ${window.splMinimumWithdrawal} টাকা)`;
+      }
 
       window.splRegistrationBonus = Math.max(0, Number(settings.registration_bonus ?? 50));
       document.querySelectorAll('.level-percent-tag').forEach((el,i)=>{ el.textContent=(window.splReferralRates[i] ?? [12,2,1][i])+'%'; });
@@ -3010,6 +3015,10 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
     function checkReferralURL() {
       const urlParams = new URLSearchParams(window.location.search);
       const refCode = urlParams.get('ref');
+      if (urlParams.get('payment') === 'return') {
+        window.history.replaceState({}, document.title, window.location.pathname);
+        setTimeout(() => { try { switchView('dashboardView'); } catch(e) {} }, 0);
+      }
       if (refCode) {
         goToRegisterScreen();
         document.getElementById('regInvite').value = refCode;
@@ -3278,7 +3287,7 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
 
       list.forEach(item => {
         const statusKey = normalizeStatus(item.status, item);
-        const statusText = statusKey === 'admin-complete' ? 'অ্যাডমিন দ্বারা সম্পন্ন — পেমেন্ট পাঠানো হয়নি' : (statusKey === 'success' ? 'সফল' : statusKey === 'failed' ? 'বাতিল' : (item.status || 'অপেক্ষমাণ'));
+        const statusText = statusKey === 'admin-complete' ? 'অ্যাডমিন দ্বারা সম্পন্ন' : (statusKey === 'success' ? 'সফল' : statusKey === 'failed' ? 'ব্যর্থ' : 'অপেক্ষমাণ');
         const statusColor = statusKey === 'success' ? '#218838' : statusKey === 'failed' ? '#dc3545' : statusKey === 'admin-complete' ? '#9a6700' : '#b7791f';
         const el = document.createElement('div');
         el.className = 'history-record';
@@ -3561,6 +3570,7 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
       if (!Number.isFinite(amount) || amount < rechargeMinAmount || amount > rechargeMaxAmount) return showAlert(`রিচার্জের পরিমাণ ৳${rechargeMinAmount} থেকে ৳${rechargeMaxAmount} এর মধ্যে দিন।`);
       if (!['bkash','nagad','rocket'].includes(selectedMethod)) return showAlert('পেমেন্ট মেথড সিলেক্ট করুন!');
       currentDepositAmount = amount;
+      window.currentWpayOrderId = null;
       const btn = document.getElementById('rechargeSubmitBtn');
       if (btn) { btn.disabled = true; btn.textContent = 'পেমেন্ট পেজ তৈরি হচ্ছে...'; }
       try {
@@ -3571,6 +3581,7 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
         // Record each initiated recharge under the signed-in user's own history.
         // The verified WPAY callback later changes this same order to success.
         if (data.orderId) {
+          window.currentWpayOrderId = data.orderId;
           const pendingRecord = {
             amount: amount,
             method: selectedMethod,
@@ -3646,7 +3657,21 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
       });
     }
 
-    function submitTrxId(){showAlert('WPAY ক্যাশিয়ার পেজ থেকে পেমেন্ট সম্পন্ন করুন। নিশ্চিত হলে ব্যালেন্স স্বয়ংক্রিয়ভাবে যুক্ত হবে।');}
+    async function submitTrxId(){
+      const trx = String(document.getElementById('trxIdInput')?.value || '').trim();
+      if (!trx) return showAlert('লেনদেন আইডি দিন।');
+      if (!currentUser) return showAlert('প্রথমে লগইন করুন।');
+      try {
+        const orderId = window.currentWpayOrderId || null;
+        if (orderId) {
+          await db.ref('users').child(currentUser.phone).child('deposits').child(orderId).update({trxId:trx, userConfirmed:true, userConfirmedAt:Date.now()});
+        }
+        closeModal('depositModal');
+        document.getElementById('trxIdInput').value='';
+        switchView('dashboardView');
+        showAlert('লেনদেন তথ্য গ্রহণ করা হয়েছে। পেমেন্ট সফল হলে ব্যালেন্স স্বয়ংক্রিয়ভাবে যুক্ত হবে।');
+      } catch(e) { showAlert('লেনদেন তথ্য সংরক্ষণ করা যায়নি। আবার চেষ্টা করুন।'); }
+    }
 
     function downloadApp() {
       showAlert('অ্যাপ্লিকেশন ডাউনলোড করা হচ্ছে...');
