@@ -2335,9 +2335,11 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
       window.splWithdrawEnd = settings.withdrawal_end_time || '17:00';
       window.splWithdrawDailyLimit = Math.max(1, Number(settings.withdrawal_daily_limit || 3));
       window.splMinimumWithdrawal = Math.max(1, Number(settings.minimum_withdrawal ?? 150));
-      window.splWithdrawalFeePercent = Math.min(100, Math.max(0, Number(settings.withdrawal_fee_percent ?? 5)));
+      window.splWithdrawalFeePercent = Math.min(100, Math.max(0, Number(settings.withdrawal_fee_percent ?? 10)));
       const withdrawScheduleText = document.getElementById('withdrawScheduleText');
       if (withdrawScheduleText) withdrawScheduleText.textContent = `* উত্তোলন সময়: ${formatWithdrawalTime(window.splWithdrawStart)} থেকে ${formatWithdrawalTime(window.splWithdrawEnd)}`;
+      const withdrawFeeLabel = document.getElementById('withdrawFeeLabel');
+      if (withdrawFeeLabel) withdrawFeeLabel.textContent = `উত্তোলন ফি (${window.splWithdrawalFeePercent}%):`;
 
       window.splRegistrationBonus = Math.max(0, Number(settings.registration_bonus ?? 50));
       document.querySelectorAll('.level-percent-tag').forEach((el,i)=>{ el.textContent=(window.splReferralRates[i] ?? [12,2,1][i])+'%'; });
@@ -2659,7 +2661,7 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
       'আর্নিং লগস মডাল':'Earnings log', 'আয়ের হিস্টোরি (Earning Logs)':'Earnings history', 'রিচার্জ ও উইথড্র হিস্ট্রি মডাল':'Deposit and withdrawal history',
       'লেনদেনের ইতিহাস':'Transaction history', 'টিম সদস্য তালিকা মডাল':'Team members', 'লেভেল ১ সদস্য তালিকা':'Level 1 members',
       'উত্তোলনের মডাল':'Withdrawal', 'উত্তোলন রিকোয়েস্ট':'Withdrawal request', '* উত্তোলন সময়: সকাল ৯:০০ টা থেকে রাত ১০:০০ টা':'* Withdrawal hours: 9:00 AM–10:00 PM',
-      'উত্তোলন ফি (৫%):':'Withdrawal fee (5%):', 'আপনি পাবেন (Net Amount):':'You will receive (net amount):', 'উত্তোলন করুন':'Withdraw',
+      'উত্তোলন ফি (৫%):':'Withdrawal fee:', 'উত্তোলন ফি (১০%):':'Withdrawal fee (10%):', 'আপনি পাবেন (Net Amount):':'You will receive (net amount):', 'উত্তোলন করুন':'Withdraw',
       'স্পিন মডাল':'Spin', 'লাকি স্পিন হুইল':'Lucky spin wheel', 'আপনার স্পিন টিকেট সংখ্যা:':'Your spin tickets:', 'স্পিন ঘুরান':'Spin now',
       'লগইন ভিউ':'Login', 'বিশ্বস্ত ফান্ড ব্যবস্থাপনা পোর্টাল':'Fund management portal', 'লগইন করুন':'Log in', 'অ্যাকাউন্ট নেই?':'No account?',
       'নিবন্ধন করুন':'Register', 'রেজিস্ট্রেশন ভিউ':'Registration', 'নতুন অ্যাকাউন্ট খুলুন (৫০ টাকা বোনাস)':'Create a new account (৳50 bonus)',
@@ -3225,8 +3227,11 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
       renderTransactionHistory();
     }
 
-    function normalizeStatus(status) {
+    function normalizeStatus(status, item = null) {
       const s = String(status ?? '').trim().toLowerCase();
+      // Admin-complete is intentionally NOT treated as a real payout/success.
+      // It means the request was closed by an admin without sending money.
+      if (item?.adminCompletionOnly || s === 'admin-complete' || s.includes('সম্পন্ন (admin)') || s.includes('admin-complete')) return 'admin-complete';
       if (['approved','success','successful','paid','completed','সম্পন্ন','সফল','অনুমোদিত','টাকা পাঠানো হয়েছে','1'].includes(s)) return 'success';
       if (['rejected','failed','cancelled','canceled','বাতিল','ব্যর্থ','2'].includes(s)) return 'failed';
       return 'pending';
@@ -3244,8 +3249,9 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
         recordId: value && (value.out_trade_no || value.recordId || value.id) || recordId
       })) : [];
 
-      const normalizeStatus = value => {
+      const normalizeStatus = (value, item = null) => {
         const status = String(value || '').toLowerCase();
+        if (item?.adminCompletionOnly || status.includes('সম্পন্ন (admin)') || status.includes('admin-complete')) return 'admin-complete';
         if (status.includes('সফল') || status.includes('complete') || status.includes('success') || status.includes('approved')) return 'success';
         if (status.includes('ব্যর্থ') || status.includes('fail') || status.includes('reject') || status.includes('cancel')) return 'failed';
         return 'pending';
@@ -3258,7 +3264,7 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
       };
 
       if (activeHistoryFilter !== 'all') {
-        list = list.filter(item => normalizeStatus(item.status) === activeHistoryFilter);
+        list = list.filter(item => normalizeStatus(item.status, item) === activeHistoryFilter);
       }
       list.sort((a, b) => getRecordTime(b) - getRecordTime(a));
 
@@ -3271,9 +3277,9 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
       }
 
       list.forEach(item => {
-        const statusKey = normalizeStatus(item.status);
-        const statusText = String(item.status||'').includes('সম্পন্ন (Admin)') ? 'অ্যাডমিন দ্বারা সম্পন্ন' : (statusKey === 'success' ? 'সফল' : statusKey === 'failed' ? 'বাতিল' : (item.status || 'অপেক্ষমাণ'));
-        const statusColor = statusKey === 'success' ? '#218838' : statusKey === 'failed' ? '#dc3545' : '#b7791f';
+        const statusKey = normalizeStatus(item.status, item);
+        const statusText = statusKey === 'admin-complete' ? 'অ্যাডমিন দ্বারা সম্পন্ন — পেমেন্ট পাঠানো হয়নি' : (statusKey === 'success' ? 'সফল' : statusKey === 'failed' ? 'বাতিল' : (item.status || 'অপেক্ষমাণ'));
+        const statusColor = statusKey === 'success' ? '#218838' : statusKey === 'failed' ? '#dc3545' : statusKey === 'admin-complete' ? '#9a6700' : '#b7791f';
         const el = document.createElement('div');
         el.className = 'history-record';
         const amount = Number(item.amount || item.money || 0);
@@ -3707,7 +3713,7 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
 
     function calculateWithdrawFee() {
       const val = parseFloat(document.getElementById('withdrawInput').value) || 0;
-      const fee = val * (Number(window.splWithdrawalFeePercent ?? 5) / 100);
+      const fee = val * (Number(window.splWithdrawalFeePercent ?? 10) / 100);
       const net = val - fee;
       document.getElementById('withdrawFeeAmt').textContent = '৳ ' + fee.toFixed(2);
       document.getElementById('withdrawNetAmt').textContent = '৳ ' + (net > 0 ? net.toFixed(2) : '0.00');
@@ -3783,7 +3789,7 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
 
     // উত্তোলন ডেটাবেজে সংরক্ষণ ফাংশন
     function proceedWithdrawProcess(amount) {
- const fee=amount*(Number(window.splWithdrawalFeePercent ?? 5)/100), netAmount=amount-fee;
+ const fee=amount*(Number(window.splWithdrawalFeePercent ?? 10)/100), netAmount=amount-fee;
  const key=db.ref('withdrawal_requests').push().key;
  const request={id:key,userPhone:currentUser.phone,userName:currentUser.name||'',amount,fee,netAmount,
  method:currentUser.withdrawAccount?.method||'bkash',accountName:currentUser.withdrawAccount?.name||'',
