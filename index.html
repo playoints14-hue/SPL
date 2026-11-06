@@ -19,16 +19,16 @@
 
     <style>
       :root {
-        --bg-main: #f8f9fa;          
+        --bg-main: #f3edff;          
         --bg-card: #ffffff;          
-        --bg-subcard: #f1f3f5;       
-        --primary-red: #1565c0;     
-        --sweet-red: #42a5f5;       
-        --sweet-peach: #e3f2fd;      
-        --red-glow: rgba(21, 101, 192, 0.18);
+        --bg-subcard: #eee7ff;       
+        --primary-red: #2563eb;     
+        --sweet-red: #7c3aed;       
+        --sweet-peach: #ede9fe;      
+        --red-glow: rgba(124, 58, 237, 0.20);
         --text-dark: #111111;        
         --text-muted: #666666;       
-        --border-color: #e9ecef;     
+        --border-color: #d9c8ff;     
         --bkash-color: #e2125d;
         --nagad-color: #f55a14;
       }
@@ -1611,8 +1611,23 @@
       .security-input {width:100%;border:1px solid var(--border-color);border-radius:12px;background:#f1f3f5;padding:14px;margin:7px 0 14px;font:600 15px 'Hind Siliguri',sans-serif;outline:none}
       .security-input:focus {border-color:var(--primary-red)}
 
-    </style>
-  </head>
+    /* Premium payout and earnings */
+.earning-page-content,.history-page-content{border:1px solid #d5e5f7!important;box-shadow:0 24px 70px rgba(20,71,120,.18)!important;background:linear-gradient(145deg,#ffffff,#f6fbff)!important}
+.earning-plan-card,.history-record{border:1px solid #d8e8f8!important;border-radius:18px!important;background:linear-gradient(145deg,#fff,#f7fbff)!important;box-shadow:0 10px 30px rgba(20,70,120,.08)!important}
+
+.modal-content{border:1px solid #d7e7f6!important;border-radius:24px!important;background:linear-gradient(145deg,#ffffff,#f5faff)!important;box-shadow:0 28px 80px rgba(13,64,112,.22)!important}
+.modal-content .modal-title{font-weight:900;letter-spacing:-.2px}
+.modal-content input,.modal-content select,.modal-content textarea{border:1px solid #c5d9ed!important;border-radius:14px!important;box-shadow:inset 0 1px 2px rgba(20,70,120,.04)}
+.modal-btn,.modal-content button{border:1px solid #a9c7e5!important;border-radius:13px!important;box-shadow:0 7px 18px rgba(20,70,120,.08)}
+</style>
+  
+<style>
+body{background:linear-gradient(145deg,#f3edff 0%,#ffffff 48%,#eee7ff 100%)!important;}
+.btn-main,.modal-btn-confirm,.recharge-submit{background:linear-gradient(135deg,#2563eb,#1d4ed8)!important;border:2px solid #4c1d95!important;box-shadow:0 8px 22px rgba(37,99,235,.22)!important;}
+button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.earning-tabs button{border-color:#7c3aed!important;}
+.btn-main:hover,.modal-btn-confirm:hover,.recharge-submit:hover{transform:translateY(-1px);filter:brightness(1.03);}
+</style>
+</head>
   <body>
 
     <!-- লোডার -->
@@ -1715,6 +1730,7 @@
             <div class="earning-summary-stats">
               <div><small>চলছে</small><strong id="earningRunningCount">0</strong></div>
               <div><small>দৈনিক আয়</small><strong id="earningDailyTotal">+৳ 0.00</strong></div>
+              <div><small>মোট আয়</small><strong id="earningTotalEarned">৳ 0.00</strong></div>
             </div>
           </div>
         </div>
@@ -1775,7 +1791,7 @@
     <div id="withdrawAmountModal" class="modal-overlay" style="display: none;">
       <div class="modal-content">
         <div class="modal-title" id="lang-w-title">উত্তোলন রিকোয়েস্ট</div>
-        <div style="font-size:11px; color:var(--primary-red); font-weight:bold; margin-bottom:8px;">* উত্তোলন সময়: সকাল ৯:০০ টা থেকে রাত ১০:০০ টা</div>
+        <div id="withdrawScheduleText" style="font-size:11px; color:var(--primary-red); font-weight:bold; margin-bottom:8px;">* উত্তোলন সময়: সকাল ৯:০০ টা থেকে রাত ১০:০০ টা</div>
         <div id="savedAccountDetails" style="font-size: 12px; color: #2ecc71; font-weight: 800; margin-bottom: 12px; background: #e8f5e9; padding: 8px; border-radius: 8px;"></div>
         
         <input type="number" id="withdrawInput" class="modal-input-field" placeholder="উত্তোলনের পরিমাণ (সর্বনিম্ন ১০০ টাকা)" oninput="calculateWithdrawFee()" />
@@ -1783,11 +1799,11 @@
         
         <div class="fee-box-info" id="withdrawFeeCalcBox">
           <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-            <span>উত্তোলন ফি (৫%):</span>
+            <span id="withdrawFeeLabel">উত্তোলন ফি (৫%):</span>
             <strong style="color:var(--primary-red);" id="withdrawFeeAmt">৳ 0.00</strong>
           </div>
           <div style="display:flex; justify-content:space-between; border-top:1px dashed #90caf9; padding-top:4px;">
-            <span>আপনি পাবেন (Net Amount):</span>
+            <span id="withdrawNetLabel">আপনি পাবেন (Net Amount):</span>
             <strong style="color:#2e7d32;" id="withdrawNetAmt">৳ 0.00</strong>
           </div>
         </div>
@@ -1856,7 +1872,7 @@
           <div class="content-area">
             <div class="brand-title">
               <h1>SPL</h1>
-              <p id="registerBonusLabel">নতুন অ্যাকাউন্ট খুলুন (৳৫০ বোনাস)</p>
+              <p id="regTitleText">নতুন অ্যাকাউন্ট খুলুন (৫০ টাকা বোনাস)</p>
             </div>
             <div class="input-container">
               <div class="custom-input-group">
@@ -1882,8 +1898,8 @@
                 <input id="regInvite" placeholder="আমন্ত্রণ কোড" type="text" />
               </div>
             </div>
-            <button type="submit" class="btn-main">নিবন্ধন সম্পন্ন করুন</button>
-            <a href="#" class="sub-link" onclick="goToLoginScreen()">ইতিমধ্যে অ্যাকাউন্ট আছে? <b>লগইন করুন</b></a>
+            <button type="submit" class="btn-main" id="regSubmitText">নিবন্ধন সম্পন্ন করুন</button>
+            <a href="#" class="sub-link" onclick="goToLoginScreen()" id="regLoginText">ইতিমধ্যে অ্যাকাউন্ট আছে? লগইন করুন</a>
           </div>
         </form>
       </div>
@@ -2306,12 +2322,17 @@
       window.splWithdrawDailyLimit = Math.max(1, Number(settings.withdrawal_daily_limit || 3));
       window.splMinimumWithdrawal = Math.max(1, Number(settings.minimum_withdrawal ?? 150));
       window.splWithdrawalFeePercent = Math.min(100, Math.max(0, Number(settings.withdrawal_fee_percent ?? 5)));
+      const withdrawScheduleText = document.getElementById('withdrawScheduleText');
+      if (withdrawScheduleText) withdrawScheduleText.textContent = `* উত্তোলন সময়: ${formatWithdrawalTime(window.splWithdrawStart)} থেকে ${formatWithdrawalTime(window.splWithdrawEnd)}`;
+
       window.splRegistrationBonus = Math.max(0, Number(settings.registration_bonus ?? 50));
-      const registerBonusLabel = document.getElementById('registerBonusLabel');
-      if (registerBonusLabel) registerBonusLabel.textContent = 'নতুন অ্যাকাউন্ট খুলুন (৳' + window.splRegistrationBonus.toLocaleString('bn-BD') + ' বোনাস)';
       document.querySelectorAll('.level-percent-tag').forEach((el,i)=>{ el.textContent=(window.splReferralRates[i] ?? [12,2,1][i])+'%'; });
       if (Array.isArray(settings.spin_prizes) && settings.spin_prizes.length >= 2) { prizes = settings.spin_prizes.map(v=>Math.max(0,Number(v)||0)); drawSpinWheel(); }
       const brand = settings.brand_name || 'SPL';
+      const registrationBonus = Number(settings.registration_bonus ?? 50);
+      document.querySelectorAll('.brand-title p').forEach(el => el.textContent = `নতুন অ্যাকাউন্ট খুলুন (${registrationBonus} টাকা বোনাস)`);
+      const marquee = document.getElementById('marqueeText');
+      if (marquee) marquee.textContent = settings.marquee_text || `SPL প্ল্যাটফর্মে আপনাকে স্বাগতম! রেজিস্ট্রেশন করলেই ${registrationBonus} টাকা বোনাস!`;
       applyRechargeSettings(settings);
       const noticeTitle = document.getElementById('noticePopupTitle');
       const noticeText = document.getElementById('noticePopupText');
@@ -2337,8 +2358,13 @@
       if (settings.editable_texts && typeof settings.editable_texts === 'object') {
         Object.entries(settings.editable_texts).forEach(([id, value]) => {
           const el = document.getElementById(id);
-          if (el && typeof value === 'string') el.textContent = value;
+          if (el && typeof value === 'string') {
+            if ('value' in el && (id.endsWith('Placeholder'))) el.placeholder = value;
+            else el.textContent = value;
+          }
         });
+        const phMap = { regNamePlaceholder:'regName', regPhonePlaceholder:'regPhone', regPasswordPlaceholder:'regPassword', regInvitePlaceholder:'regInvite', withdrawInputPlaceholder:'withdrawInput' };
+        Object.entries(phMap).forEach(([key,id])=>{ if (typeof settings.editable_texts?.[key] === 'string') { const el=document.getElementById(id); if(el) el.placeholder=settings.editable_texts[key]; }});
       }
     });
 
@@ -2622,7 +2648,7 @@
       'উত্তোলন ফি (৫%):':'Withdrawal fee (5%):', 'আপনি পাবেন (Net Amount):':'You will receive (net amount):', 'উত্তোলন করুন':'Withdraw',
       'স্পিন মডাল':'Spin', 'লাকি স্পিন হুইল':'Lucky spin wheel', 'আপনার স্পিন টিকেট সংখ্যা:':'Your spin tickets:', 'স্পিন ঘুরান':'Spin now',
       'লগইন ভিউ':'Login', 'বিশ্বস্ত ফান্ড ব্যবস্থাপনা পোর্টাল':'Fund management portal', 'লগইন করুন':'Log in', 'অ্যাকাউন্ট নেই?':'No account?',
-      'নিবন্ধন করুন':'Register', 'রেজিস্ট্রেশন ভিউ':'Registration', 'নতুন অ্যাকাউন্ট খুলুন (৫০ টাকা বোনাস)':'Create a new account (registration bonus)',
+      'নিবন্ধন করুন':'Register', 'রেজিস্ট্রেশন ভিউ':'Registration', 'নতুন অ্যাকাউন্ট খুলুন (৫০ টাকা বোনাস)':'Create a new account (৳50 bonus)',
       'নিবন্ধন সম্পন্ন করুন':'Complete registration', 'ইতিমধ্যে অ্যাকাউন্ট আছে?':'Already have an account?', 'ড্যাশবোর্ড ভিউ':'Dashboard',
       'ভয়েস চালু/বন্ধ করার রোবট বাটন':'Voice toggle', 'ভয়েস চালু':'Enable voice', 'হোম স্ক্রিন':'Home',
       'স্পেশাল বোনাস কোড ক্লেম সেকশন':'Special bonus code', 'স্পেশাল বোনাস রিডিম কোড':'Special bonus redeem code',
@@ -3099,10 +3125,12 @@
       const running = plans.filter(inv => getEarningPlanStatus(inv) === 'running');
       const completed = plans.filter(inv => getEarningPlanStatus(inv) === 'completed');
       const dailyTotal = running.reduce((sum, inv) => sum + Number(inv.daily || 0), 0);
-
+      const totalEarned = plans.reduce((sum, inv) => sum + Number(inv.totalEarned || 0), 0);
       document.getElementById('earningTotalDeposit').textContent = '৳ ' + totalDeposit.toFixed(2);
       document.getElementById('earningRunningCount').textContent = running.length;
       document.getElementById('earningDailyTotal').textContent = '+৳ ' + dailyTotal.toFixed(2);
+      const totalEarnedEl = document.getElementById('earningTotalEarned');
+      if (totalEarnedEl) totalEarnedEl.textContent = '৳ ' + totalEarned.toFixed(2);
       const progress = plans.length ? Math.round((completed.length / plans.length) * 100) : 0;
       document.getElementById('earningProgressPercent').textContent = progress + '%';
 
@@ -3123,7 +3151,8 @@
         const isCompleted = getEarningPlanStatus(inv) === 'completed';
         const el = document.createElement('div');
         el.className = 'earning-plan-card';
-        const safeTitle = String(inv.title || 'প্ল্যান');
+        const safeTitle = String(inv.title || 'প্ল্যান');        const lastPaid = Number(inv.lastClaimTime || inv.purchaseTime || 0);
+        const nextPaid = lastPaid + 86400000;
         el.innerHTML = `
           <div class="earning-plan-head">
             <span class="earning-plan-name"></span>
@@ -3131,7 +3160,10 @@
           </div>
           <div class="earning-plan-meta">
             প্যাকেজ মূল্য: <b>৳${Number(inv.cost || 0).toFixed(2)}</b><br>
-            ${isCompleted ? 'প্ল্যানের অবস্থা: সম্পন্ন' : 'প্ল্যানের অবস্থা: চলমান'}
+            দৈনিক আয়: <b>৳${Number(inv.daily || 0).toFixed(2)}</b><br>
+            মোট পেয়েছেন: <b>৳${Number(inv.totalEarned || 0).toFixed(2)}</b><br>
+            সর্বশেষ আয়: <b>${lastPaid ? new Date(lastPaid).toLocaleString('bn-BD') : '—'}</b><br>
+            ${isCompleted ? 'প্ল্যানের অবস্থা: সম্পন্ন' : 'পরবর্তী আয়: <b>' + new Date(nextPaid).toLocaleString('bn-BD') + '</b>'}
           </div>`;
         el.querySelector('.earning-plan-name').textContent = safeTitle;
         container.appendChild(el);
@@ -3219,8 +3251,7 @@
 
       list.forEach(item => {
         const statusKey = normalizeStatus(item.status);
-        const rawStatus = String(item.status || '').toLowerCase();
-      const statusText = (statusKey === 'success' ? 'সম্পন্ন' : statusKey === 'failed' ? 'ব্যর্থ' : 'অপেক্ষমাণ');
+        const statusText = item.status || (statusKey === 'pending' ? 'অপেক্ষমাণ' : statusKey === 'success' ? 'সম্পন্ন' : 'ব্যর্থ');
         const statusColor = statusKey === 'success' ? '#218838' : statusKey === 'failed' ? '#dc3545' : '#b7791f';
         const el = document.createElement('div');
         el.className = 'history-record';
@@ -3735,7 +3766,7 @@
  const key=db.ref('withdrawal_requests').push().key;
  const request={id:key,userPhone:currentUser.phone,userName:currentUser.name||'',amount,fee,netAmount,
  method:currentUser.withdrawAccount?.method||'bkash',accountName:currentUser.withdrawAccount?.name||'',
- accountNumber:currentUser.withdrawAccount?.number||'',status:'pending',
+ accountNumber:currentUser.withdrawAccount?.number||'',status:'পেন্ডিং',
  createdAt:Date.now(),date:new Date().toLocaleDateString('bn-BD')};
  const updates={}; updates['withdrawal_requests/'+key]=request; updates['users/'+currentUser.phone+'/withdrawals/'+key]=request;
  db.ref().update(updates).then(()=>{
@@ -3796,45 +3827,31 @@
         const password = document.getElementById('regPassword').value.trim();
         const invitedBy = document.getElementById('regInvite').value.trim();
         const deviceId = getOrCreateDeviceId();
-        if (!name || phone.length !== 11 || !/^01[3-9]\d{8}$/.test(phone) || !password) {
-          showAlert('সঠিক নাম, ১১ ডিজিটের বাংলাদেশি মোবাইল নম্বর এবং পাসওয়ার্ড দিন।');
-          return;
+        if (!name || phone.length !== 11 || !/^01[3-9]\d{8}$/.test(phone) || password.length < 4) {
+          showAlert('সঠিক নাম, ১১ ডিজিটের বাংলাদেশি মোবাইল নম্বর এবং পাসওয়ার্ড দিন।'); return;
         }
-        const userRef = db.ref('users').child(phone);
-        const snapshot = await userRef.once('value');
-        if (snapshot.exists()) {
-          showAlert('এই মোবাইল নম্বর দিয়ে ইতিমধ্যে অ্যাকাউন্ট খোলা হয়েছে!');
-          return;
-        }
-        const uniqueRefCode = generateReferralCode();
-        const userData = {
-          name, phone, password, referralCode: uniqueRefCode,
-          invitedByCode: invitedBy || null, balance: Number(window.splRegistrationBonus ?? 50), spinTickets: 0,
-          deviceId, purchasedCounts: {}, investments: {}, deposits: {},
-          withdrawals: {}, claimed_codes: {},
-          timestamp: firebase.database.ServerValue.TIMESTAMP
-        };
-        await userRef.set(userData);
-        // Device history is informational only; it must not block registration.
-        const deviceRef = db.ref('devices').child(deviceId);
-        const deviceSnap = await deviceRef.once('value').catch(() => null);
-        if (deviceSnap) {
-          const deviceData = deviceSnap.val() || { count: 0, users: [] };
-          const users = Array.isArray(deviceData.users) ? deviceData.users : [];
+        const response = await fetch('/api/register', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({name, phone, password, invitedByCode: invitedBy, deviceId})
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'নিবন্ধন করা যায়নি');
+        try {
+          const deviceRef = db.ref('devices').child(deviceId);
+          const snap = await deviceRef.once('value');
+          const d = snap.val() || {count:0, users:[]};
+          const users = Array.isArray(d.users) ? d.users : [];
           if (!users.includes(phone)) users.push(phone);
-          await deviceRef.set({ count: users.length, users, lastUpdated: firebase.database.ServerValue.TIMESTAMP }).catch(err => console.warn('Device history:', err));
-        }
-        // Referral commission is configured in site_settings; payout must be performed by trusted backend after package purchase.
-        showAlert('নিবন্ধন সফল হয়েছে! আপনি ৳' + Number(window.splRegistrationBonus ?? 50) + ' বোনাস পেয়েছেন।');
-        speakVoice('নিবন্ধন সফল হয়েছে! আপনাকে ' + Number(window.splRegistrationBonus ?? 50) + ' টাকা ওয়েলকাম বোনাস দেওয়া হয়েছে।');
+          await deviceRef.set({count:users.length, users, lastUpdated:firebase.database.ServerValue.TIMESTAMP});
+        } catch(e) { console.warn('Device history:', e); }
+        const bonus = Number(data.bonus ?? window.splRegistrationBonus ?? 50);
+        showAlert('নিবন্ধন সফল হয়েছে! আপনি ৳' + bonus + ' বোনাস পেয়েছেন।');
+        speakVoice('নিবন্ধন সফল হয়েছে! আপনাকে ' + bonus + ' টাকা ওয়েলকাম বোনাস দেওয়া হয়েছে।');
         document.getElementById('registerForm').reset();
         setTimeout(() => goToLoginScreen(), 1200);
       } catch (error) {
         console.error('Registration error:', error);
-        const msg = error && error.code === 'PERMISSION_DENIED'
-          ? 'Firebase Rules-এ Read/Write অনুমতি নেই। নিচের দেওয়া Rules বসান।'
-          : 'নিবন্ধন করা যায়নি: ' + (error.message || 'Firebase সংযোগ পরীক্ষা করুন।');
-        showAlert(msg);
+        showAlert(error.message || 'নিবন্ধন করা যায়নি।');
       } finally {
         if (submitButton) { submitButton.disabled = false; submitButton.textContent = oldText; }
       }
@@ -3983,12 +4000,19 @@
           const buyCount = (freshUser.purchasedCounts && freshUser.purchasedCounts[planId]) || 0;
           const updatedCount = buyCount + 1;
 
+          const purchaseTime = Date.now();
           const newInvest = {
+            packageId: plan.id,
             title: plan.name,
-            cost: plan.cost,
-            daily: plan.daily,
-            purchaseTime: Date.now(), 
-            lastClaimTime: Date.now()  
+            cost: Number(plan.cost || 0),
+            daily: Number(plan.daily || 0),
+            duration: Number(plan.duration || 0),
+            purchaseTime,
+            lastClaimTime: purchaseTime,
+            endTime: Number(plan.duration || 0) > 0 ? purchaseTime + Number(plan.duration) * 86400000 : 0,
+            totalEarned: 0,
+            earningCount: 0,
+            status: 'running'
           };
 
           const newInvestKey = db.ref('users').child(freshUser.phone).child('investments').push().key;
@@ -4046,47 +4070,39 @@
     }
 
     function startAutoIncomeSystem() {
-      autoIncomeInterval = setInterval(() => {
-        if (!currentUser || !currentUser.investments) return;
-
-        const list = Object.values(currentUser.investments);
-        if (list.length === 0) return;
-
-        const now = Date.now();
-        const msPerDay = 24 * 60 * 60 * 1000; 
-        let stateChanged = false;
-
-        const keys = Object.keys(currentUser.investments);
-        keys.forEach((key, index) => {
-          const item = currentUser.investments[key];
-          let elapsedMs = now - item.lastClaimTime;
-
-          if (elapsedMs >= msPerDay) {
-            const periodsEarned = Math.floor(elapsedMs / msPerDay);
-            const totalEarning = periodsEarned * item.daily;
-
-            currentUser.balance += totalEarning;
-            item.lastClaimTime = item.lastClaimTime + (periodsEarned * msPerDay);
-            stateChanged = true;
-            showAlert(`SPL - আপনার "${item.title}" থেকে ৳${totalEarning} অটো-ইনকাম জমা হয়েছে!`);
-            speakVoice(`আপনার প্যাকেজ থেকে ${totalEarning} টাকা মুনাফা ওয়ালেটে যুক্ত হয়েছে।`);
+      if (autoIncomeInterval) clearInterval(autoIncomeInterval);
+      const refreshFromServer = async () => {
+        if (!currentUser?.phone) return;
+        try {
+          const snap = await db.ref('users').child(currentUser.phone).once('value');
+          if (snap.exists()) {
+            currentUser = snap.val();
+            updateBalanceDisplay();
+            updateInvestmentsList();
+            renderEarningPlans();
           }
-
-          const timerEl = document.getElementById(`timer-inv-${index}`);
-          if (timerEl) {
-            const remainingMs = msPerDay - (elapsedMs % msPerDay);
-            const rHours = Math.floor((remainingMs / (1000 * 60 * 60)) % 24);
-            const rMins = Math.floor((remainingMs / (1000 * 60)) % 60);
-            const rSecs = Math.floor((remainingMs / 1000) % 60);
-            timerEl.textContent = `${String(rHours).padStart(2, '0')}h ${String(rMins).padStart(2, '0')}m ${String(rSecs).padStart(2, '0')}s`;
+        } catch(e) { console.warn('Auto income refresh:', e); }
+      };
+      const renderTimers = () => {
+        if (!currentUser?.investments) return;
+        Object.values(currentUser.investments).forEach((item,index) => {
+          const last = Number(item.lastClaimTime || item.purchaseTime || Date.now());
+          const end = Number(item.endTime || 0);
+          const target = end && last + 86400000 > end ? end : last + 86400000;
+          const remaining = Math.max(0, target - Date.now());
+          const el = document.getElementById(`timer-inv-${index}`);
+          if (!el) return;
+          if (end && Date.now() >= end) el.textContent = 'সম্পন্ন';
+          else {
+            const h=Math.floor(remaining/3600000), m=Math.floor((remaining%3600000)/60000), sec=Math.floor((remaining%60000)/1000);
+            el.textContent=`${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(sec).padStart(2,'0')}s`;
           }
         });
-
-        if (stateChanged) {
-          saveUserData();
-          updateBalanceDisplay();
-        }
-      }, 1000);
+      };
+      renderTimers();
+      autoIncomeInterval=setInterval(renderTimers,1000);
+      refreshFromServer();
+      setInterval(refreshFromServer,60000);
     }
   </script>
 </body>
