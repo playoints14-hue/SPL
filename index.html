@@ -3287,7 +3287,7 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
 
       list.forEach(item => {
         const statusKey = normalizeStatus(item.status, item);
-        const statusText = statusKey === 'admin-complete' ? 'অ্যাডমিন দ্বারা সম্পন্ন' : (statusKey === 'success' ? 'সফল' : statusKey === 'failed' ? 'ব্যর্থ' : 'অপেক্ষমাণ');
+        const statusText = statusKey === 'admin-complete' ? 'সম্পন্ন' : statusKey === 'success' ? 'সফল' : statusKey === 'failed' ? 'ব্যর্থ' : 'অপেক্ষমাণ';
         const statusColor = statusKey === 'success' ? '#218838' : statusKey === 'failed' ? '#dc3545' : statusKey === 'admin-complete' ? '#9a6700' : '#b7791f';
         const el = document.createElement('div');
         el.className = 'history-record';
