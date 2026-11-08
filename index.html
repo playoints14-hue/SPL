@@ -2353,7 +2353,7 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
         </div>
       </div>
     </div><script>
-    // WPAY Merchant ID: 5375. API Secret কেবল Render Environment Variables-এ রাখুন।\n    // Backend: WPAY_MCH_ID=5375, WPAY_API_SECRET=..., WPAY_BASE_URL=https://api.wpay.life\n    // ফায়ারবেস কনফিগারেশন
+    // NEKpay credentials are kept on the Render server only. Never put the Payment Key in this HTML.\n    // ফায়ারবেস কনফিগারেশন
     const firebaseConfig = {
       apiKey: "AIzaSyAXxxJS_hqkjGyMUlI0Fu1lhWPkSFzr_Hk",
       authDomain: "splora-7abad.firebaseapp.com",
@@ -3375,7 +3375,7 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
         const el = document.createElement('div');
         el.className = 'history-record';
         const amount = Number(item.amount || item.money || 0);
-        const method = item.method || item.pay_type || (activeHistoryKind === 'withdraw' ? 'bKash/Nagad' : 'WPAY');
+        const method = item.method || item.pay_type || (activeHistoryKind === 'withdraw' ? 'bKash/Nagad' : 'NEKpay');
         const dateText = item.date || (getRecordTime(item) ? new Date(getRecordTime(item)).toLocaleString('bn-BD') : '-');
 
         if (activeHistoryKind === 'recharge') {
@@ -3674,18 +3674,18 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
       if (!Number.isFinite(amount) || amount < rechargeMinAmount || amount > rechargeMaxAmount) return showAlert(`রিচার্জের পরিমাণ ৳${rechargeMinAmount} থেকে ৳${rechargeMaxAmount} এর মধ্যে দিন।`);
       if (!['bkash','nagad'].includes(selectedMethod)) return showAlert('পেমেন্ট মেথড সিলেক্ট করুন!');
       currentDepositAmount = amount;
-      window.currentWpayOrderId = null;
+      window.currentNekpayOrderId = null;
       const btn = document.getElementById('rechargeSubmitBtn');
       if (btn) { btn.disabled = true; btn.textContent = 'পেমেন্ট পেজ তৈরি হচ্ছে...'; }
       try {
-        const r = await fetch('/api/wpay/collect', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userPhone:currentUser.phone,amount,method:selectedMethod})});
+        const r = await fetch('/api/nekpay/collect', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userPhone:currentUser.phone,amount,method:selectedMethod})});
         const data = await r.json();
         if (!r.ok || !data.paymentUrl) throw new Error(data.message || 'পেমেন্ট লিংক তৈরি করা যায়নি');
 
         // Record each initiated recharge under the signed-in user's own history.
-        // The verified WPAY callback later changes this same order to success.
+        // The verified NEKpay callback later changes this same order to success.
         if (data.orderId) {
-          window.currentWpayOrderId = data.orderId;
+          window.currentNekpayOrderId = data.orderId;
           const pendingRecord = {
             amount: amount,
             method: selectedMethod,
@@ -3766,7 +3766,7 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
       if (!trx) return showAlert('লেনদেন আইডি দিন।');
       if (!currentUser) return showAlert('প্রথমে লগইন করুন।');
       try {
-        const orderId = window.currentWpayOrderId || null;
+        const orderId = window.currentNekpayOrderId || null;
         if (orderId) {
           await db.ref('users').child(currentUser.phone).child('deposits').child(orderId).update({trxId:trx, userConfirmed:true, userConfirmedAt:Date.now()});
         }
