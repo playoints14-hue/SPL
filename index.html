@@ -19,8 +19,8 @@
 
     <style>
       :root {
-        --bg-main: #eee6ff;          
-        --bg-card: #fbf9ff;          
+        --bg-main: #f4f1ff;          
+        --bg-card: #ffffff;          
         --bg-subcard: #e4d8ff;       
         --primary-red: #2563eb;     
         --sweet-red: #7c3aed;       
@@ -2021,68 +2021,108 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
 
         <!-- হোম স্ক্রিন: শুধু ট্রেড লাইসেন্স কার্ড উপরে -->
         <div id="homeSubScreen" class="screen active">
-          <div class="license-card-container">
-            <div class="license-header-box">
-              <div class="gov-title">GOVERNMENT OF BANGLADESH • MINISTRY OF COMMERCE</div>
-              <div class="gov-sub">SPL Platform</div>
-              <div class="license-badge-tag"><i class="ri-shield-check-fill"></i> TRADE LICENSE CERTIFIED</div>
-            </div>
-            <div class="license-details-grid">
-              <div class="license-detail-item"><label>LICENSE NO</label><span>ALF-2026-AMU-001256</span></div>
-              <div class="license-detail-item"><label>REGISTRATION NO</label><span>AMU-2026-BD-001256</span></div>
-              <div class="license-detail-item"><label>ISSUE DATE</label><span>02 June 2026</span></div>
-              <div class="license-detail-item"><label>VALID TO</label><span>01 June 2031</span></div>
-            </div>
-            <div class="license-activities-box">
-              <div class="title"><i class="ri-checkbox-circle-line"></i> AUTHORIZED ACTIVITIES</div>
-              <div class="activity-tags-list"><span class="act-tag">Financial Advisory</span><span class="act-tag">Investment Management</span><span class="act-tag">Portfolio Management</span><span class="act-tag">Wealth Management</span><span class="act-tag">FinTech Solutions</span></div>
-            </div>
-            <div class="license-footer-text"><i class="ri-map-pin-2-line"></i> SPL Platform</div>
-          </div>
+  <style>
+    .hm-wrap{background:var(--bg-main);border-radius:28px;padding:12px;font-family:inherit;color:var(--text-dark)}
+    .hm-top{display:flex;align-items:center;justify-content:space-between;padding:4px 2px 14px}
+    .hm-user{display:flex;align-items:center;gap:10px}
+    .hm-avatar{width:46px;height:46px;border-radius:50%;background:var(--primary-red);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px}
+    .hm-date{font-size:11px;color:var(--text-muted)}
+    .hm-phone{font-size:16px;font-weight:700}
+    .hm-bell{width:42px;height:42px;border-radius:50%;background:var(--bg-card);display:flex;align-items:center;justify-content:center;font-size:18px}
+    .hm-card{background:var(--bg-card);border-radius:22px;padding:18px;box-shadow:0 4px 14px rgba(37,99,235,.08)}
+    .hm-head{display:flex;justify-content:space-between;align-items:center}
+    .hm-brand{font-weight:800;font-size:18px}
+    .hm-brand small{font-size:12px;color:var(--text-muted);font-weight:500;margin-left:4px}
+    .hm-plan-pill{border:1px solid var(--border-color);border-radius:999px;padding:6px 12px;font-size:12px;display:flex;gap:6px;align-items:center}
+    .hm-plan-pill b{background:var(--primary-red);color:#fff;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center}
+    .hm-lbl{margin-top:16px;font-size:13px;color:var(--text-muted)}
+    .hm-amount{font-size:38px;font-weight:800;margin-top:2px}
+    .hm-avail{font-size:12px;color:var(--text-muted);margin-top:4px}
+    .hm-stats{display:grid;grid-template-columns:1fr 1fr;margin-top:14px;border:1px solid var(--border-color);border-radius:16px;overflow:hidden}
+    .hm-stats div{padding:12px}
+    .hm-stats div+div{border-left:1px solid var(--border-color)}
+    .hm-stats span{font-size:12px;color:var(--text-muted);display:block}
+    .hm-stats strong{display:block;margin-top:4px}
+    .hm-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+    .hm-btn{border-radius:999px;padding:14px;font-weight:700;font-size:15px;border:1px solid var(--border-color);background:transparent;color:var(--text-dark);cursor:pointer}
+    .hm-btn.primary{background:var(--primary-red);color:#fff;border-color:var(--primary-red)}
+    .hm-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+    .hm-tile{border-radius:20px;padding:16px;font-weight:700;color:var(--text-dark);background:var(--bg-subcard);cursor:pointer;border:0;text-align:left;font-size:15px}
+    .hm-tile.alt{background:#dbeafe}
+    .hm-steps{margin-top:14px;padding:16px}
+    .hm-steps .k{color:var(--primary-red);font-size:12px;font-weight:700}
+    .hm-steps h3{font-size:18px;font-weight:800;margin:4px 0 12px}
+    .hm-step-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .hm-step{background:var(--bg-subcard);border-radius:14px;padding:10px;border:0;text-align:left;cursor:pointer;color:var(--text-dark)}
+    .hm-step.on{background:var(--bg-card);border:1px solid var(--primary-red)}
+    .hm-step i{display:inline-flex;width:24px;height:24px;border-radius:50%;background:var(--bg-card);align-items:center;justify-content:center;font-style:normal;font-weight:700}
+    .hm-step.on i{background:var(--primary-red);color:#fff}
+    .hm-step b{display:block;margin-top:6px;font-size:13px;font-weight:600}
+    .hm-step em{display:block;margin-top:6px;font-style:normal;font-size:12px;color:var(--primary-red)}
+  </style>
 
-
-          <div class="bonus-code-card" id="homeBonusCodeCard">
-            <div class="bonus-card-header">
-              <div class="bonus-icon-circle"><i class="ri-gift-2-line"></i></div>
-              <div>
-                <div class="bonus-card-title">স্পেশাল বোনাস রিডিম কোড</div>
-                <div class="bonus-card-subtitle">এডমিনের দেওয়া উপহার কোড দিয়ে জিতে নিন ফ্রি ব্যালেন্স!</div>
-              </div>
-            </div>
-            <div class="bonus-input-group">
-              <input type="text" id="bonusCodeInput" class="bonus-input-field" placeholder="বোনাস কোড লিখুন..." />
-              <button class="btn-claim-bonus" onclick="claimBonusCode()">ক্লেম করুন</button>
-            </div>
-          </div>
-
-          <div class="live-activity-section">
-            <div class="live-activity-header">
-              <span><i class="ri-pulse-line" style="color:var(--primary-red);font-size:16px;"></i> প্ল্যাটফর্ম রানিং ট্রানজেকশন (Live)</span>
-              <span style="color:#2ecc71;font-size:11px;">● Active Users</span>
-            </div>
-            <div class="running-ticker-box"><div class="running-ticker-inner" id="runningTickerList"></div></div>
-          </div>
-
-          <div class="news-marquee-bar">
-            <i class="ri-volume-up-line"></i>
-            <div class="marquee-content" aria-label="হোম ঘোষণা">
-              <div class="marquee-track" id="marqueeTrack">
-                <span id="marqueeText">SPL প্ল্যাটফর্মে আপনাকে স্বাগতম! রেজিস্ট্রেশন করলেই ৫০ টাকা বোনাস, প্রতি রেফারে ১০ টাকা এবং ইনভেস্টে ফ্রি স্পিন পান!</span>
-                <span id="marqueeTextClone" aria-hidden="true">SPL প্ল্যাটফর্মে আপনাকে স্বাগতম! রেজিস্ট্রেশন করলেই ৫০ টাকা বোনাস, প্রতি রেফারে ১০ টাকা এবং ইনভেস্টে ফ্রি স্পিন পান!</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="action-grid">
-            <div class="action-card" onclick="openDepositModal()"><div class="action-icon-box bg-dep"><i class="ri-add-box-line"></i></div><span id="nav-lbl-dep">ডিপোজিট</span></div>
-            <div class="action-card" onclick="openWithdrawalFormOnly()"><div class="action-icon-box bg-pay"><i class="ri-bank-line"></i></div><span id="nav-lbl-pay">পেইউট</span></div>
-            <div class="action-card" onclick="openSpinModal()"><div class="action-icon-box bg-spin"><i class="ri-price-tag-3-line"></i></div><span id="nav-lbl-spin">স্পিন</span></div>
-            <div class="action-card" onclick="downloadApp()"><div class="action-icon-box bg-app"><i class="ri-download-line"></i></div><span id="nav-lbl-apps">অ্যাপ</span></div>
-          </div>
-
+  <div class="hm-wrap">
+    <div class="hm-top">
+      <div class="hm-user">
+        <div class="hm-avatar" id="homeAvatarInitial">S</div>
+        <div>
+          <div class="hm-date" id="homeDateLabel">SPL</div>
+          <div class="hm-phone" id="homePhoneNumber">-</div>
         </div>
+      </div>
+      <div class="hm-bell"><i class="ri-notification-3-line"></i></div>
+    </div>
 
-        <!-- প্যাকেজ স্ক্রিন -->
+    <div class="hm-card">
+      <div class="hm-head">
+        <div class="hm-brand"><span id="homeWelcomeName">SPL</span><small>সদস্য</small></div>
+        <div class="hm-plan-pill"><b id="homeActivePlanCount">0</b> সক্রিয় প্ল্যান</div>
+      </div>
+      <div class="hm-lbl">সদস্য ব্যালেন্স</div>
+      <div class="hm-amount">৳ <span id="homeBalanceAmount">0.00</span></div>
+      <div class="hm-avail">উপলব্ধ ব্যালেন্স ৳ <span id="homeAvailableBalance">0.00</span></div>
+      <div class="hm-stats">
+        <div><span>দৈনিক আয়</span><strong style="color:#15803d">+৳ <span id="homeDailyIncome">0.00</span></strong></div>
+        <div><span>মোট জমা</span><strong>৳ <span id="homeTotalDeposit">0.00</span></strong></div>
+      </div>
+      <div class="hm-btns">
+        <button class="hm-btn primary" onclick="openDepositModal()">↙ <span id="nav-lbl-dep">রিচার্জ</span></button>
+        <button class="hm-btn" onclick="openWithdrawalFormOnly()">↗ <span id="nav-lbl-pay">উত্তোলন</span></button>
+      </div>
+    </div>
+
+    <div class="hm-tiles">
+      <button class="hm-tile" onclick="switchSubScreen('teamSubScreen', document.getElementById('b-nav-team'))">👥 আমন্ত্রণ</button>
+      <button class="hm-tile alt" onclick="toggleHomeBonusCard()">🎁 গিফট কোড</button>
+    </div>
+
+    <div class="bonus-code-card" id="homeBonusCodeCard" style="display:none;margin-top:14px">
+      <div class="bonus-card-header">
+        <div class="bonus-icon-circle"><i class="ri-gift-2-line"></i></div>
+        <div>
+          <div class="bonus-card-title">বোনাস কোড দিন</div>
+          <div class="bonus-card-subtitle">বোনাস কোড থাকলে এখানে লিখে দাবি করুন।</div>
+        </div>
+      </div>
+      <div class="bonus-input-group">
+        <input type="text" id="bonusCodeInput" class="bonus-input-field" placeholder="কোড লিখুন..." />
+        <button class="btn-claim-bonus" onclick="claimBonusCode()">দাবি করুন</button>
+      </div>
+    </div>
+
+    <div class="hm-card hm-steps">
+      <div class="k">শুরুর ধাপ</div>
+      <h3>আপনার ডেস্ক গুছিয়ে নিন</h3>
+      <div class="hm-step-row">
+        <button class="hm-step on" onclick="openDepositModal()"><i>1</i><b>রিচার্জ</b><em>শুরু করুন →</em></button>
+        <button class="hm-step" onclick="switchSubScreen('packageSubScreen', document.getElementById('b-nav-pkg'))"><i>2</i><b>প্ল্যান নিন</b></button>
+        <button class="hm-step" onclick="switchSubScreen('teamSubScreen', document.getElementById('b-nav-team'))"><i>3</i><b>আমন্ত্রণ</b></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- প্যাকেজ স্ক্রিন -->
         <div id="packageSubScreen" class="screen">
           <div class="section-title" id="lang-plan-title">পাবলিক ইনভেস্টমেন্ট প্যাকেজসমূহ</div>
           <div class="plans-grid" id="packagesList"></div>
@@ -2100,170 +2140,189 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
 
         <!-- টিম স্ক্রিন -->
         <div id="teamSubScreen" class="screen">
-          <div class="team-overview-row">
-            <div class="team-stat-card">
-              <div class="team-icon-circle" style="background:#e3f2fd; color:#1976d2;">
-                <i class="ri-team-line"></i>
-              </div>
-              <div class="team-stat-info">
-                <div id="topTeamSizeVal">0</div>
-                <div>TEAM SIZE</div>
-              </div>
-            </div>
-            <div class="team-stat-card">
-              <div class="team-icon-circle" style="background:#e3f2fd; color:#1e88e5;">
-                <i class="ri-shopping-bag-line"></i>
-              </div>
-              <div class="team-stat-info">
-                <div id="topTotalInvestVal">৳ 0</div>
-                <div>TOTAL INVEST</div>
-              </div>
-            </div>
-          </div>
+  <style>
+    .t-wrap{background:var(--bg-main);border-radius:24px;padding:14px;color:var(--text-dark);font-family:'Hind Siliguri','Inter',system-ui,sans-serif}
+    .t-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .t-title{font-size:20px;font-weight:800;color:var(--primary-red);display:flex;align-items:center;gap:8px}
+    .t-invite{border:1px solid var(--border-color);border-radius:999px;padding:8px 12px;font-size:13px;font-weight:600;background:var(--bg-card);color:var(--text-dark);cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px}
+    .t-hero{background:linear-gradient(135deg,var(--primary-red),var(--sweet-red));border-radius:22px;padding:18px;color:#fff}
+    .t-hero .big{font-family:Inter,sans-serif;font-size:34px;font-weight:800;margin-top:4px}
+    .t-hero .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+    .t-hero .box{background:rgba(255,255,255,.18);border-radius:16px;padding:12px}
+    .t-card{background:var(--bg-card);border-radius:20px;padding:14px;box-shadow:0 4px 14px rgba(37,99,235,.08);margin-top:12px}
+    .t-sec{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px}
+    .t-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px;background:var(--bg-main);border-radius:16px;padding:5px}
+    .t-tab{background:transparent;border:0;border-radius:12px;padding:10px 4px;text-align:center;cursor:pointer;color:var(--text-dark);font-family:inherit}
+    .t-tab.on{background:linear-gradient(135deg,var(--primary-red),var(--sweet-red));color:#fff}
+    .t-tabname{font-weight:700;font-size:14px}
+    .t-tabsub{font-size:11px;opacity:.9;margin-top:2px}
+    .t-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+    .t-stat{border:1px solid var(--border-color);border-radius:16px;padding:12px;display:flex;gap:10px;align-items:center;background:var(--bg-card)}
+    .t-ic{width:38px;height:38px;border-radius:12px;background:var(--bg-subcard);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+    .t-val{font-family:Inter,sans-serif;font-size:18px;font-weight:800}
+    .t-lbl{font-size:12px;color:var(--text-muted)}
+    .t-sec2{font-size:14px;font-weight:700;margin:16px 0 4px}
+    .t-empty{text-align:center;padding:24px 0 8px;color:var(--text-muted);font-size:13px}
+    .t-mem{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bg-subcard);font-size:14px}
+    .t-mem:last-child{border-bottom:0}
+    .t-mem .ava{width:34px;height:34px;border-radius:50%;background:var(--bg-subcard);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+    .t-mem .meta{font-size:12px;color:var(--text-muted);font-family:Inter,sans-serif}
+    .t-field-lbl{font-size:13px;font-weight:600;color:var(--text-muted);margin-top:12px}
+    .t-field{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--border-color);border-radius:14px;padding:11px 12px;margin-top:6px;background:var(--bg-card);font-size:13px;gap:8px}
+    .t-field input{border:0;background:transparent;flex:1;min-width:0;font-family:Inter,sans-serif;font-weight:700;color:var(--text-dark);font-size:13px;outline:none}
+    .t-copy{background:transparent;border:0;color:var(--primary-red);cursor:pointer;display:flex;padding:4px}
+    .t-promo{margin-top:12px;border:1px dashed var(--primary-red);border-radius:16px;padding:12px;font-size:13px;line-height:1.6;background:var(--bg-card)}
+  </style>
 
-          <div class="invite-card-container">
-            <div class="invite-input-label">রেফারাল লিঙ্ক (Referral Link):</div>
-            <div class="copy-field-box">
-              <input type="text" id="referralLinkInput" readonly value="https://spl.com/?ref=AMUNDI00" />
-              <i class="ri-file-copy-line" onclick="copyReferralLink()"></i>
-            </div>
+  <div class="t-wrap">
+    <div class="t-head">
+      <div class="t-title"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--primary-red)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 19c0-3 3-5 6-5s6 2 6 5M14 19c0-2 2-3.5 4-3.5s3 1 3 3"/></svg>টিম</div>
+      <button class="t-invite" onclick="copyReferralLink()"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--primary-red)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 19c0-3 3-5 6-5s6 2 6 5M18 7v6M15 10h6"/></svg>আমন্ত্রণ</button>
+    </div>
 
-            <div class="invite-input-label">রেফারাল কোড (Referral Code):</div>
-            <div class="copy-field-box">
-              <input type="text" id="referralCodeInput" readonly value="AMUNDI00" />
-              <i class="ri-file-copy-line" onclick="copyReferralCodeOnly()"></i>
-            </div>
+    <div class="t-hero">
+      <div style="font-size:13px;opacity:.9">মোট দলের আয়</div>
+      <div class="big">৳ <span id="topTotalInvestVal">0.00</span></div>
+      <div class="grid">
+        <div class="box"><div style="font-family:Inter;font-size:18px;font-weight:800" id="topTeamSizeVal">0</div><div style="font-size:12px;opacity:.9">মোট আমন্ত্রণ</div></div>
+        <div class="box"><div style="font-family:Inter;font-size:18px;font-weight:800">৳ <span id="teamInvestTotal">0.00</span></div><div style="font-size:12px;opacity:.9">দলীয় বিনিয়োগ</div></div>
+      </div>
+    </div>
 
-            <div class="invite-promo-banner" id="referralPromoText">রেফার করা ইউজার প্যাকেজ কিনলে অ্যাডমিন নির্ধারিত কমিশন প্রযোজ্য হবে।</div>
-          </div>
-
-          <!-- প্রথম স্তর (Level 1) -->
-          <div class="level-card-block">
-            <div class="level-header-bar">
-              <div>
-                <span class="level-badge-tag">Level 1</span>
-                <span class="level-percent-tag" style="margin-left: 6px;">12%</span>
-              </div>
-              <button class="btn-view-team" onclick="openLevelMembersModal(1)">
-                <i class="ri-user-search-line"></i> সদস্য তালিকা
-              </button>
-            </div>
-            <div class="level-grid-4">
-              <div class="level-box-item"><div id="lvl1Members">0</div><div>Members</div></div>
-              <div class="level-box-item"><div id="lvl1Deposit">৳ 0</div><div>Total Deposit</div></div>
-              <div class="level-box-item"><div id="lvl1Comm">৳ 0</div><div>Commission</div></div>
-              <div class="level-box-item"><div id="lvl1With">৳ 0</div><div>Withdrawal</div></div>
-            </div>
-          </div>
-
-          <!-- দ্বিতীয় স্তর (Level 2) -->
-          <div class="level-card-block">
-            <div class="level-header-bar">
-              <div>
-                <span class="level-badge-tag">Level 2</span>
-                <span class="level-percent-tag" style="margin-left: 6px;">2%</span>
-              </div>
-              <button class="btn-view-team" onclick="openLevelMembersModal(2)">
-                <i class="ri-user-search-line"></i> সদস্য তালিকা
-              </button>
-            </div>
-            <div class="level-grid-4">
-              <div class="level-box-item"><div id="lvl2Members">0</div><div>Members</div></div>
-              <div class="level-box-item"><div id="lvl2Deposit">৳ 0</div><div>Total Deposit</div></div>
-              <div class="level-box-item"><div id="lvl2Comm">৳ 0</div><div>Commission</div></div>
-              <div class="level-box-item"><div id="lvl2With">৳ 0</div><div>Withdrawal</div></div>
-            </div>
-          </div>
-
-          <!-- তৃতীয় স্তর (Level 3) -->
-          <div class="level-card-block">
-            <div class="level-header-bar">
-              <div>
-                <span class="level-badge-tag">Level 3</span>
-                <span class="level-percent-tag" style="margin-left: 6px;">1%</span>
-              </div>
-              <button class="btn-view-team" onclick="openLevelMembersModal(3)">
-                <i class="ri-user-search-line"></i> সদস্য তালিকা
-              </button>
-            </div>
-            <div class="level-grid-4">
-              <div class="level-box-item"><div id="lvl3Members">0</div><div>Members</div></div>
-              <div class="level-box-item"><div id="lvl3Deposit">৳ 0</div><div>Total Deposit</div></div>
-              <div class="level-box-item"><div id="lvl3Comm">৳ 0</div><div>Commission</div></div>
-              <div class="level-box-item"><div id="lvl3With">৳ 0</div><div>Withdrawal</div></div>
-            </div>
-          </div>
+    <div class="t-card">
+      <div class="t-sec"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M12 8v4M6 16v-2h12v2"/></svg>দলের সদস্যরা</div>
+      <div class="t-tabs">
+        <button class="t-tab on" id="teamTab1" onclick="splSetLevel(1)"><div class="t-tabname">লেভেল 1</div><div class="t-tabsub"><span id="lvl1Members">0</span> জন সদস্য · <span class="level-percent-tag">12%</span></div></button>
+        <button class="t-tab" id="teamTab2" onclick="splSetLevel(2)"><div class="t-tabname">লেভেল 2</div><div class="t-tabsub"><span id="lvl2Members">0</span> জন সদস্য · <span class="level-percent-tag">2%</span></div></button>
+        <button class="t-tab" id="teamTab3" onclick="splSetLevel(3)"><div class="t-tabname">লেভেল 3</div><div class="t-tabsub"><span id="lvl3Members">0</span> জন সদস্য · <span class="level-percent-tag">1%</span></div></button>
+      </div>
+      <div class="t-panel" id="teamPanel1" style="">
+        <div class="t-stats">
+          <div class="t-stat"><span class="t-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 19c0-3 3-5 6-5s6 2 6 5"/></svg></span><div><div class="t-val" id="c1Members">0</div><div class="t-lbl">মোট অ্যাকাউন্ট (জন)</div></div></div>
+          <div class="t-stat"><span class="t-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg></span><div><div class="t-val" id="c1Invest">৳ 0</div><div class="t-lbl">মোট ইনভেস্ট</div></div></div>
+          <div class="t-stat"><span class="t-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="7" rx="7" ry="3"/><path d="M5 7v5c0 1.7 3 3 7 3s7-1.3 7-3V7M5 12v5c0 1.7 3 3 7 3s7-1.3 7-3v-5"/></svg></span><div><div class="t-val" id="c1Comm">৳ 0.0</div><div class="t-lbl">মোট আয়</div></div></div>
+          <div class="t-stat"><span class="t-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V5M7 10l5-5 5 5"/><path d="M4 19h16"/></svg></span><div><div class="t-val" id="c1With">৳ 0</div><div class="t-lbl">মোট উত্তোলন</div></div></div>
         </div>
+        <div class="t-sec2">সদস্য তালিকা</div>
+        <div id="teamList1"></div>
+        <div class="t-empty" id="teamEmpty1">লেভেল 1-এ এখনো কোনো সদস্য নেই।</div>
+      </div>
+      <div class="t-panel" id="teamPanel2" style="display:none;">
+        <div class="t-stats">
+          <div class="t-stat"><span class="t-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 19c0-3 3-5 6-5s6 2 6 5"/></svg></span><div><div class="t-val" id="c2Members">0</div><div class="t-lbl">মোট অ্যাকাউন্ট (জন)</div></div></div>
+          <div class="t-stat"><span class="t-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg></span><div><div class="t-val" id="c2Invest">৳ 0</div><div class="t-lbl">মোট ইনভেস্ট</div></div></div>
+          <div class="t-stat"><span class="t-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="7" rx="7" ry="3"/><path d="M5 7v5c0 1.7 3 3 7 3s7-1.3 7-3V7M5 12v5c0 1.7 3 3 7 3s7-1.3 7-3v-5"/></svg></span><div><div class="t-val" id="c2Comm">৳ 0.0</div><div class="t-lbl">মোট আয়</div></div></div>
+          <div class="t-stat"><span class="t-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V5M7 10l5-5 5 5"/><path d="M4 19h16"/></svg></span><div><div class="t-val" id="c2With">৳ 0</div><div class="t-lbl">মোট উত্তোলন</div></div></div>
+        </div>
+        <div class="t-sec2">সদস্য তালিকা</div>
+        <div id="teamList2"></div>
+        <div class="t-empty" id="teamEmpty2">লেভেল 2-এ এখনো কোনো সদস্য নেই।</div>
+      </div>
+      <div class="t-panel" id="teamPanel3" style="display:none;">
+        <div class="t-stats">
+          <div class="t-stat"><span class="t-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 19c0-3 3-5 6-5s6 2 6 5"/></svg></span><div><div class="t-val" id="c3Members">0</div><div class="t-lbl">মোট অ্যাকাউন্ট (জন)</div></div></div>
+          <div class="t-stat"><span class="t-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg></span><div><div class="t-val" id="c3Invest">৳ 0</div><div class="t-lbl">মোট ইনভেস্ট</div></div></div>
+          <div class="t-stat"><span class="t-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="7" rx="7" ry="3"/><path d="M5 7v5c0 1.7 3 3 7 3s7-1.3 7-3V7M5 12v5c0 1.7 3 3 7 3s7-1.3 7-3v-5"/></svg></span><div><div class="t-val" id="c3Comm">৳ 0.0</div><div class="t-lbl">মোট আয়</div></div></div>
+          <div class="t-stat"><span class="t-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V5M7 10l5-5 5 5"/><path d="M4 19h16"/></svg></span><div><div class="t-val" id="c3With">৳ 0</div><div class="t-lbl">মোট উত্তোলন</div></div></div>
+        </div>
+        <div class="t-sec2">সদস্য তালিকা</div>
+        <div id="teamList3"></div>
+        <div class="t-empty" id="teamEmpty3">লেভেল 3-এ এখনো কোনো সদস্য নেই।</div>
+      </div>
+    </div>
+
+    <div class="t-card">
+      <div class="t-field-lbl" style="margin-top:0">রেফারেল লিংক</div>
+      <div class="t-field"><input id="referralLinkInput" readonly value="" /><button class="t-copy" onclick="copyReferralLink()"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--primary-red)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></div>
+      <div class="t-field-lbl">রেফারেল কোড</div>
+      <div class="t-field"><input id="referralCodeInput" readonly value="" /><button class="t-copy" onclick="copyReferralCodeOnly()"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--primary-red)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></div>
+      <div class="t-promo" id="referralPromoText"></div>
+    </div>
+  </div>
+
+  <div style="display:none">
+    <span id="lvl1Deposit"></span><span id="lvl1Comm"></span><span id="lvl1With"></span><span id="lvl1Invest"></span>
+    <span id="lvl2Deposit"></span><span id="lvl2Comm"></span><span id="lvl2With"></span><span id="lvl2Invest"></span>
+    <span id="lvl3Deposit"></span><span id="lvl3Comm"></span><span id="lvl3With"></span><span id="lvl3Invest"></span>
+    
+  </div>
+</div>
 
         <!-- প্রোফাইল / Me স্ক্রিন -->
         <div id="meSubScreen" class="screen">
-          <div class="user-balance-section">
-            <div class="lbl">স্বাগতম, <span id="userDisplayName" style="font-weight:800; color:#000;">গ্রাহক</span></div>
-            <div class="val">ব্যালেন্স: ৳<span id="balanceAmount" class="bold-val">0.00</span></div>
-          </div>
-
-          <div class="common-functions-container">
-            <div class="common-functions-title">Common Functions</div>
-            <div class="common-grid">
-              
-              <div class="common-item" onclick="openDepositModal()">
-                <div class="common-icon-wrapper c-dep"><i class="ri-add-box-line"></i></div>
-                <span>Deposit</span>
-              </div>
-
-              <div class="common-item" onclick="openWithdrawalFormOnly()">
-                <div class="common-icon-wrapper c-with"><i class="ri-file-copy-2-line"></i></div>
-                <span>Withdraw</span>
-              </div>
-
-              <div class="common-item" onclick="handleWithdrawSetupMenuItemClick()">
-                <div class="common-icon-wrapper c-bank"><i class="ri-bank-card-line"></i></div>
-                <span>Bank Card</span>
-              </div>
-
-              <div class="common-item" onclick="openPersonalInfoModal()">
-                <div class="common-icon-wrapper c-sec"><i class="ri-shield-keyhole-line"></i></div>
-                <span>Security</span>
-              </div>
-
-              <div class="common-item" onclick="openEarningLogsModal()">
-                <div class="common-icon-wrapper c-log1"><i class="ri-gift-line"></i></div>
-                <span>Earning Logs</span>
-              </div>
-
-              <div class="common-item" onclick="openRechargeLogsModal()">
-                <div class="common-icon-wrapper c-log2"><i class="ri-history-line"></i></div>
-                <span>Recharge Logs</span>
-              </div>
-
-              <div class="common-item" onclick="openWithdrawLogsModal()">
-                <div class="common-icon-wrapper c-log3"><i class="ri-wallet-3-line"></i></div>
-                <span>Withdraw Logs</span>
-              </div>
-
-              <div class="common-item" onclick="openSupportLink('support')">
-                <div class="common-icon-wrapper c-help"><i class="ri-customer-service-2-line"></i></div>
-                <span>Help Desk</span>
-              </div>
-
-              <div class="common-item" onclick="openSupportLink('channel')">
-                <div class="common-icon-wrapper c-tg"><i class="ri-telegram-line"></i></div>
-                <span>Channel</span>
-              </div>
-
-              <div class="common-item" onclick="openSupportLink('group')">
-                <div class="common-icon-wrapper c-tg"><i class="ri-telegram-line"></i></div>
-                <span>Group</span>
-              </div>
-
-              <div class="common-item" onclick="logout()">
-                <div class="common-icon-wrapper c-logout"><i class="ri-logout-box-r-line"></i></div>
-                <span style="color: var(--primary-red);">Logout</span>
-              </div>
-
-            </div>
-          </div>
-        </div>
+  <style>
+    .me-wrap{background:var(--bg-main);border-radius:24px;padding:14px;color:var(--text-dark);font-family:'Hind Siliguri','Inter',system-ui,sans-serif}
+    .me-top{display:flex;align-items:center;gap:12px;padding:2px 2px 12px}
+    .me-avatar{width:54px;height:54px;border-radius:50%;background:var(--primary-red);color:#fff;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif;font-weight:800;font-size:14px}
+    .me-role{font-size:16px;font-weight:600;color:#4b4560}
+    .me-phone{font-family:Inter,sans-serif;font-size:14px;color:#6b6480;margin-top:2px}
+    .me-card{background:var(--bg-card);border-radius:20px;padding:16px;box-shadow:0 4px 14px rgba(37,99,235,.08)}
+    .me-pill{display:flex;justify-content:flex-end}
+    .me-pill div{border:1px solid var(--border-color);border-radius:999px;padding:6px 12px;font-size:12px;display:flex;align-items:center;gap:6px}
+    .me-pill b{background:var(--primary-red);color:#fff;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-family:Inter,sans-serif;font-size:11px}
+    .me-lbl{margin-top:6px;font-size:13px;color:#6b6480}
+    .me-amount{font-family:Inter,sans-serif;font-size:36px;font-weight:800}
+    .me-stats{display:grid;grid-template-columns:1fr 1fr;margin-top:10px;border:1px solid var(--border-color);border-radius:16px;overflow:hidden}
+    .me-stats div{padding:12px}
+    .me-stats div+div{border-left:1px solid var(--border-color)}
+    .me-stats span{font-size:12px;color:#6b6480;display:block}
+    .me-stats strong{display:block;margin-top:4px;font-family:Inter,sans-serif}
+    .me-btns{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:8px;margin-top:10px}
+    .me-btn{border-radius:999px;padding:11px 4px;font-weight:600;font-size:13px;border:1px solid var(--border-color);background:transparent;color:var(--text-dark);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit}
+    .me-btn.primary{background:var(--primary-red);color:#fff;border-color:var(--primary-red)}
+    .me-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+    .me-tile{border:0;border-radius:18px;padding:12px 6px;font-size:12px;font-weight:600;color:var(--text-dark);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;font-family:inherit}
+    .me-tic{width:36px;height:36px;border-radius:12px;background:var(--bg-card);display:flex;align-items:center;justify-content:center}
+    .me-sec{font-size:12px;font-weight:600;color:#6b6480;margin:14px 2px 6px}
+    .me-list{background:var(--bg-card);border-radius:18px;overflow:hidden}
+    .me-item{display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;background:transparent;border:0;border-top:1px solid var(--bg-subcard);color:var(--text-dark);font-size:14px;font-weight:500;cursor:pointer;text-align:left;font-family:inherit}
+    .me-list .me-item:first-child{border-top:0}
+    .me-ic{width:36px;height:36px;border-radius:12px;background:var(--bg-subcard);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+    .me-chev{margin-left:auto;display:flex}
+    .me-logout{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:var(--bg-card);border-radius:18px;margin-top:12px;padding:14px;border:0;color:#dc2626;font-weight:600;font-size:15px;cursor:pointer;font-family:inherit}
+  </style>
+  <div class="me-wrap">
+    <div class="me-top">
+      <div class="me-avatar">SPL</div>
+      <div><div class="me-role">সদস্য</div><div class="me-phone" id="userDisplayName">-</div></div>
+    </div>
+    <div class="me-card">
+      <div class="me-pill"><div><b id="mePlanCount">0</b>সক্রিয় প্ল্যান</div></div>
+      <div class="me-lbl">ব্যালেন্স</div>
+      <div class="me-amount">৳ <span id="balanceAmount">0.00</span></div>
+      <div class="me-stats">
+        <div><span>দৈনিক আয়</span><strong style="color:#15803d">+৳ <span id="meDailyIncome">0.00</span></strong></div>
+        <div><span>মোট জমা</span><strong>৳ <span id="meTotalDeposit">0.00</span></strong></div>
+      </div>
+      <div class="me-btns">
+        <button class="me-btn primary" onclick="openDepositModal()">↙ রিচার্জ</button>
+        <button class="me-btn" onclick="openWithdrawalFormOnly()">↗ উত্তোলন</button>
+        <button class="me-btn" onclick="openWithdrawLogsModal()"><span style="display:inline-flex"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h6M9 16h4"/></svg></span>রেকর্ড</button>
+      </div>
+    </div>
+    <div class="me-tiles">
+      <button class="me-tile" style="background:#e4d8ff" onclick="switchSubScreen('ordersSubScreen', document.getElementById('b-nav-ord'))"><span class="me-tic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-red)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/></svg></span>আমার<br>প্ল্যান</button>
+      <button class="me-tile" style="background:#dbeafe" onclick="openEarningLogsModal()"><span class="me-tic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-red)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V4"/><path d="M4 20h16"/><path d="M8 16l4-5 3 3 5-6"/></svg></span>কার্যক্রম</button>
+      <button class="me-tile" style="background:#fbecc9" onclick="handleWithdrawSetupMenuItemClick()"><span class="me-tic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-red)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg></span>পেমেন্ট<br>অ্যাকাউন্ট</button>
+      <button class="me-tile" style="background:#fbdede" onclick="switchSubScreen('homeSubScreen', document.getElementById('b-nav-home')); toggleHomeBonusCard();"><span class="me-tic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-red)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M3 12h18M12 8v13"/><path d="M12 8c-1.5-3-5-3-5-1s5 1 5 1zM12 8c1.5-3 5-3 5-1s-5 1-5 1z"/></svg></span>গিফট<br>কোড</button>
+    </div>
+    <div class="me-sec">ইতিহাস</div>
+    <div class="me-list">
+      <button class="me-item" onclick="openRechargeLogsModal()"><span class="me-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-red)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg></span>রিচার্জের ইতিহাস<span class="me-chev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9a93ad" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
+      <button class="me-item" onclick="openWithdrawLogsModal()"><span class="me-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-red)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M12 15V9m-3 3l3-3 3 3"/></svg></span>উত্তোলনের ইতিহাস<span class="me-chev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9a93ad" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
+    </div>
+    <div class="me-sec">সেবা</div>
+    <div class="me-list">
+      <button class="me-item" onclick="openConciergePage()"><span class="me-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-red)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16a8 8 0 0 1 16 0"/><path d="M3 18h18"/><path d="M12 8V6"/></svg></span>কনসিয়ার্জ<span class="me-chev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9a93ad" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
+      <button class="me-item" onclick="openPlatformRules()"><span class="me-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-red)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h6M9 16h4"/></svg></span>প্ল্যাটফর্মের নিয়ম<span class="me-chev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9a93ad" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
+    </div>
+    <div class="me-sec">সেটিংস</div>
+    <div class="me-list">
+      <button class="me-item" onclick="openChangePasswordModal()"><span class="me-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-red)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>পাসওয়ার্ড পরিবর্তন<span class="me-chev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9a93ad" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
+    </div>
+    <button class="me-logout" onclick="logout()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>লগ আউট</button>
+  </div>
+</div>
 
         <div class="bottom-nav">
           <div class="nav-item active" onclick="switchSubScreen('homeSubScreen', this)">
@@ -2371,6 +2430,9 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
     // SPL সাইট সেটিংস: অ্যাডমিন প্যানেল থেকে brand_name, payment_number,
     // theme_images এবং editable_texts আপডেট করলে এখানে তা প্রয়োগ হবে।
     db.ref('site_settings').on('value', (snapshot) => {
+        window.splPlatformRules = (snapshot.val() || {}).platform_rules || '';
+        window.splRulesImage = (snapshot.val() || {}).rules_image_url || '';
+        window.splConcierge = (snapshot.val() || {}).concierge_settings || {};
       const settings = snapshot.val() || {};
       window.splReferralRates = Array.isArray(settings.referral_commission_rates) ? settings.referral_commission_rates : [12,2,1];
       window.splWithdrawStart = settings.withdrawal_start_time || '10:00';
@@ -2436,7 +2498,8 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
       if (telegramLink) { const u=(settings.telegram_channel_url||'').trim(); telegramLink.href=u||'#'; telegramLink.style.display=u?'block':'none'; const btn=telegramLink.querySelector('button'); if(btn) btn.textContent=settings.telegram_channel_label||'টেলিগ্রাম চ্যানেলে যুক্ত হন'; }
       const promo = document.getElementById('referralPromoText');
       if (promo) {
-        const pct = Math.max(0, Number(settings.referral_commission_percent ?? settings.referralCommissionPercent ?? 0));
+        const levelOneRate = Array.isArray(settings.referral_commission_rates) ? settings.referral_commission_rates[0] : 12;
+ const pct = Math.max(0, Number(settings.referral_commission_percent ?? settings.referralCommissionPercent ?? levelOneRate ?? 0));
         // Admin panel versions may save this field using snake_case or camelCase.
         const editableTexts = settings.editable_texts || settings.editableTexts || {};
         const promoValue = settings.referral_promo_text
@@ -2930,7 +2993,75 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
       });
     }
 
+    function splMirrorTeam() {
+      const pairs = [['lvl1Members','lvl1MembersCard'],['topTotalInvestVal','teamInvestTotal']];
+      pairs.forEach(([from,to]) => { const a=document.getElementById(from), b=document.getElementById(to); if (a && b) b.textContent = a.textContent; });
+    }
+    function splSetLevel(n) {
+      [1,2,3].forEach(k => {
+        const p = document.getElementById('teamPanel' + k);
+        const t = document.getElementById('teamTab' + k);
+        if (p) p.style.display = k === n ? '' : 'none';
+        if (t) t.classList.toggle('on', k === n);
+      });
+    }
+    function splMaskPhone(p) { const v = String(p || ''); return v.length > 6 ? v.slice(0, 3) + '••••' + v.slice(-4) : v; }
+    function splDate(ts) { const n = Number(ts || 0); if (!n) return ''; return new Date(n).toLocaleDateString('bn-BD'); }
+    async function splLoadTeam() {
+      if (!currentUser || !currentUser.referralCode) return;
+      const snap = await db.ref('users').once('value');
+      const users = snap.val() || {};
+      const all = Object.entries(users).map(([phone, u]) => Object.assign({}, u, { phone: (u && u.phone) || phone }));
+      const byCode = {};
+      all.forEach(u => { if (u.referralCode) byCode[u.referralCode] = u; });
+      const me = currentUser.referralCode;
+      const l1 = all.filter(u => u.invitedByCode === me);
+      const c1 = l1.map(u => u.referralCode).filter(Boolean);
+      const l2 = all.filter(u => u.invitedByCode && c1.includes(u.invitedByCode));
+      const c2 = l2.map(u => u.referralCode).filter(Boolean);
+      const l3 = all.filter(u => u.invitedByCode && c2.includes(u.invitedByCode));
+      const levels = [l1, l2, l3];
+      const rates = Array.isArray(window.splReferralRates) ? window.splReferralRates : [12, 2, 1];
+      const logs = Object.values(currentUser.referralCommissionLog || {});
+      const isOk = (st) => { const t = String(st || '').toLowerCase(); return t.includes('success') || t.includes('সফল') || t.includes('approved') || t.includes('paid') || t.includes('completed'); };
+      const sumInvest = (u) => Object.values(u.investments || {}).reduce((a, i) => a + Number((i && (i.amount ?? i.price ?? i.cost)) || 0), 0);
+      const sumDeposit = (u) => Object.values(u.deposits || {}).reduce((a, d) => a + (isOk(d && d.status) ? Number(d.amount || 0) : 0), 0);
+      const sumWithdraw = (u) => Object.values(u.withdrawals || {}).reduce((a, w) => a + (isOk(w && w.status) ? Number(w.amount || 0) : 0), 0);
+      const setT = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+      let total = 0, totalInvest = 0;
+      levels.forEach((arr, idx) => {
+        const n = idx + 1;
+        const inv = arr.reduce((a, u) => a + sumInvest(u), 0);
+        const dep = arr.reduce((a, u) => a + sumDeposit(u), 0);
+        const wd = arr.reduce((a, u) => a + sumWithdraw(u), 0);
+        const earned = logs.filter(l => Number(l.level) === n).reduce((a, l) => a + Number(l.amount || 0), 0);
+        total += arr.length; totalInvest += inv;
+        setT('lvl' + n + 'Members', arr.length);
+        setT('c' + n + 'Members', arr.length);
+        setT('c' + n + 'Invest', '৳ ' + inv);
+        setT('c' + n + 'Comm', '৳ ' + earned.toFixed(1));
+        setT('c' + n + 'With', '৳ ' + wd);
+        setT('lvl' + n + 'Invest', inv); setT('lvl' + n + 'Deposit', dep); setT('lvl' + n + 'Comm', earned); setT('lvl' + n + 'With', wd);
+        const list = document.getElementById('teamList' + n);
+        const empty = document.getElementById('teamEmpty' + n);
+        if (list) list.innerHTML = arr.map(u => {
+          const ref = byCode[u.invitedByCode];
+          const refName = ref ? escHtml(ref.name || ref.phone) : '-';
+          return '<div class="t-mem"><span class="ava"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg></span>' +
+            '<div style="flex:1"><div style="font-weight:600">' + escHtml(u.name || '-') + '</div><div class="meta">' + escHtml(splMaskPhone(u.phone)) + ' · যোগদান ' + splDate(u.timestamp) + ' · রেফারার: ' + refName + '</div></div>' +
+            '<div style="text-align:right;font-family:Inter;font-weight:700;font-size:13px">৳ ' + sumInvest(u) + '<div class="t-lbl">ইনভেস্ট</div></div></div>';
+        }).join('');
+        if (empty) empty.style.display = arr.length ? 'none' : '';
+        if (list && arr.length === 0) list.innerHTML = '';
+      });
+      const rateTags = document.querySelectorAll('.level-percent-tag');
+      rateTags.forEach((el, i) => { el.textContent = (Number(rates[i]) || 0) + '%'; });
+      setT('topTeamSizeVal', total);
+      setT('topTotalInvestVal', totalInvest.toFixed(2));
+      setT('teamInvestTotal', totalInvest.toFixed(2));
+    }
     function updateTeamScreenData() {
+      splLoadTeam().catch(e => console.warn('team load', e));
       if (!currentUser) return;
 
       const refLink = window.location.origin + window.location.pathname + "?ref=" + (currentUser.referralCode || 'SPL00000');
@@ -2997,16 +3128,19 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
         document.getElementById('lvl1Deposit').textContent = '৳ ' + s1.deposit;
         document.getElementById('lvl1Comm').textContent = '৳ ' + s1.commission.toFixed(1);
         document.getElementById('lvl1With').textContent = '৳ ' + s1.withdrawal;
+    document.getElementById('lvl1Invest').textContent = '৳ ' + s1.invest;
 
         document.getElementById('lvl2Members').textContent = s2.count;
         document.getElementById('lvl2Deposit').textContent = '৳ ' + s2.deposit;
         document.getElementById('lvl2Comm').textContent = '৳ ' + s2.commission.toFixed(1);
         document.getElementById('lvl2With').textContent = '৳ ' + s2.withdrawal;
+    document.getElementById('lvl2Invest').textContent = '৳ ' + s2.invest;
 
         document.getElementById('lvl3Members').textContent = s3.count;
         document.getElementById('lvl3Deposit').textContent = '৳ ' + s3.deposit;
         document.getElementById('lvl3Comm').textContent = '৳ ' + s3.commission.toFixed(1);
         document.getElementById('lvl3With').textContent = '৳ ' + s3.withdrawal;
+    document.getElementById('lvl3Invest').textContent = '৳ ' + s3.invest;
       });
     }
 
@@ -4082,7 +4216,7 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
 
     function initDashboard(showNotice = false) {
       if (!currentUser) return;
-      document.getElementById('userDisplayName').textContent = currentUser.name;
+      document.getElementById('userDisplayName').textContent = currentUser.phone || currentUser.name;
       updateBalanceDisplay();
       updateInvestmentsList();
       switchView('dashboardView');
@@ -4105,10 +4239,109 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
       }
     }
 
+    function toggleHomeBonusCard() {
+      const card = document.getElementById('homeBonusCodeCard');
+      if (!card) return;
+      card.style.display = card.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function escHtml(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+    function splCloseOverlay() { const o = document.getElementById('splOverlay'); if (o) o.remove(); }
+    function splOverlay(inner) {
+      splCloseOverlay();
+      const o = document.createElement('div');
+      o.id = 'splOverlay';
+      o.style.cssText = 'position:fixed;inset:0;background:rgba(30,27,46,.45);display:flex;align-items:flex-end;justify-content:center;z-index:9999';
+      o.innerHTML = '<div style="background:var(--bg-main);width:100%;max-width:480px;max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;padding:14px 14px 22px;font-family:\'Hind Siliguri\',\'Inter\',system-ui,sans-serif;color:var(--text-dark)">' + inner + '</div>';
+      o.onclick = (e) => { if (e.target === o) splCloseOverlay(); };
+      document.body.appendChild(o);
+      return o;
+    }
+    function splGo(type) { splCloseOverlay(); openSupportLink(type); }
+    function splGoTeam() { splCloseOverlay(); switchSubScreen('teamSubScreen', document.getElementById('b-nav-team')); }
+    const SPL_HERO_SVG = '<svg viewBox="0 0 340 170" width="100%" height="170" preserveAspectRatio="xMidYMid slice"><rect x="0" y="128" width="340" height="42" fill="#c8b3f5"/><rect x="60" y="70" width="220" height="60" rx="10" fill="#2563eb" opacity=".9"/><circle cx="170" cy="62" r="30" fill="#fbf9ff"/><path d="M152 62a18 18 0 0 1 36 0" stroke="#2563eb" stroke-width="4" fill="none"/></svg>';
+    const SPL_RULES_SVG = '<svg viewBox="0 0 340 170" width="100%" height="170" preserveAspectRatio="xMidYMid slice"><rect x="90" y="30" width="160" height="120" rx="10" fill="#fbf9ff" stroke="#2563eb" stroke-width="3"/><rect x="115" y="60" width="110" height="8" rx="4" fill="#c8b3f5"/><rect x="115" y="80" width="90" height="8" rx="4" fill="#c8b3f5"/><rect x="115" y="100" width="100" height="8" rx="4" fill="#c8b3f5"/><circle cx="235" cy="44" r="14" fill="#2563eb"/><path d="M229 44l4 4 8-8" stroke="#fff" stroke-width="2.5" fill="none"/></svg>';
+    function splHeroBox(imageUrl, svg) {
+      if (imageUrl) return '<img src="' + escHtml(imageUrl) + '" alt="" style="width:100%;height:170px;object-fit:cover;border-radius:16px;display:block">';
+      return '<div style="height:170px;border-radius:16px;background:linear-gradient(180deg,#dbeafe,#eee6ff);overflow:hidden">' + svg + '</div>';
+    }
+    const SPL_ICO = (d, c) => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="' + (c || '#2563eb') + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
+    const SPL_CHEV = '<span style="margin-left:auto;color:#9a93ad">' + SPL_ICO('<path d="M9 6l6 6-6 6"/>', '#9a93ad') + '</span>';
+    const SPL_QUESTION_ICON = '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.7M12 17h.01"/>';
+    function splRow(icon, label, onclick) {
+      return '<button onclick="' + onclick + '" style="display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;background:transparent;border:0;border-top:1px solid #e4d8ff;color:var(--text-dark);font-size:14px;font-weight:500;cursor:pointer;text-align:left;font-family:inherit">' +
+        '<span style="width:36px;height:36px;border-radius:12px;background:var(--bg-subcard);display:flex;align-items:center;justify-content:center">' + SPL_ICO(icon) + '</span>' + label + SPL_CHEV + '</button>';
+    }
+    function openConciergePage() {
+      const c = window.splConcierge || {};
+      const title = c.title || 'আজ কীভাবে সাহায্য করতে পারি?';
+      const text = c.text || 'সদস্যপদ, রিচার্জ বা উত্তোলন নিয়ে জানতে চান? নিচের যেকোনো চ্যানেলে যোগাযোগ করুন।';
+      const hours = c.hours || '09:00–18:00';
+      const reply = c.reply || 'আমরা সাধারণত ৫ মিনিটের মধ্যে উত্তর দিই';
+      const list = (rows) => '<div style="background:var(--bg-card);border-radius:18px;overflow:hidden">' + rows.join('') + '</div>';
+      const html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><button onclick="splCloseOverlay()" style="width:40px;height:40px;border-radius:50%;background:var(--bg-card);border:1px solid var(--border-color);color:var(--primary-red);cursor:pointer">' + SPL_ICO('<path d="M15 18l-6-6 6-6"/>') + '</button></div>' +
+        '<div style="background:var(--bg-card);border-radius:20px;padding:16px">' + splHeroBox(c.image, SPL_HERO_SVG) +
+        '<div style="position:relative;margin-top:-44px;margin-left:12px;display:inline-block;background:var(--bg-card);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:600">● কনসিয়ার্জ ডেস্ক</div>' +
+        '<div style="font-size:20px;font-weight:800;margin-top:14px;line-height:1.35">' + escHtml(title) + '</div>' +
+        '<div style="font-size:13px;color:#6b6480;margin-top:6px;line-height:1.6">' + escHtml(text) + '</div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"><span style="background:var(--bg-main);border-radius:999px;padding:6px 12px;font-size:13px;font-family:Inter,sans-serif">' + escHtml(hours) + '</span><span style="background:#dcfce7;color:#15803d;border-radius:999px;padding:6px 12px;font-size:13px">' + escHtml(reply) + '</span></div></div>' +
+        '<div style="font-size:12px;font-weight:600;color:#6b6480;margin:14px 2px 6px">দ্রুত প্রশ্ন</div>' +
+        list([
+          '<button onclick="splGo(\'support\')" style="display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;background:transparent;border:0;color:var(--text-dark);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit">' + SPL_ICO(SPL_QUESTION_ICON) + 'রিচার্জ পাইনি' + SPL_CHEV + '</button>',
+          '<button onclick="splGo(\'support\')" style="display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;background:transparent;border:0;border-top:1px solid #e4d8ff;color:var(--text-dark);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit">' + SPL_ICO(SPL_QUESTION_ICON) + 'উত্তোলন পাইনি' + SPL_CHEV + '</button>',
+          '<button onclick="splGoTeam()" style="display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;background:transparent;border:0;border-top:1px solid #e4d8ff;color:var(--text-dark);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit">' + SPL_ICO(SPL_QUESTION_ICON) + 'আমার প্রমোশন কোথায়?' + SPL_CHEV + '</button>'
+        ]) +
+        '<div style="font-size:12px;font-weight:600;color:#6b6480;margin:14px 2px 6px">সহায়তা চ্যানেল</div>' +
+        list([
+          '<button onclick="splGo(\'group\')" style="display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;background:transparent;border:0;color:var(--text-dark);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit">' + SPL_ICO('<path d="M21 4L3 11l7 2 2 7z"/>') + 'টেলিগ্রাম গ্রুপ' + SPL_CHEV + '</button>',
+          '<button onclick="splGo(\'support\')" style="display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;background:transparent;border:0;border-top:1px solid #e4d8ff;color:var(--text-dark);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit">' + SPL_ICO('<path d="M3 18v-6a9 9 0 0 1 18 0v6"/><rect x="3" y="16" width="4" height="5" rx="1"/><rect x="17" y="16" width="4" height="5" rx="1"/>') + 'গ্রাহক পরিষেবা' + SPL_CHEV + '</button>',
+          '<button onclick="splGo(\'channel\')" style="display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;background:transparent;border:0;border-top:1px solid #e4d8ff;color:var(--text-dark);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit">' + SPL_ICO('<path d="M21 4L3 11l7 2 2 7z"/>') + 'টেলিগ্রাম চ্যানেল' + SPL_CHEV + '</button>'
+        ]);
+      splOverlay(html);
+    }
+    function openPlatformRules() {
+      const img = window.splRulesImage || '';
+      const text = window.splPlatformRules || 'প্ল্যাটফর্মের নিয়ম এখনো যোগ করা হয়নি।';
+      const html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><button onclick="splCloseOverlay()" style="width:40px;height:40px;border-radius:50%;background:var(--bg-card);border:1px solid var(--border-color);color:var(--primary-red);cursor:pointer">' + SPL_ICO('<path d="M15 18l-6-6 6-6"/>') + '</button></div>' +
+        '<div style="background:var(--bg-card);border-radius:20px;padding:14px">' + splHeroBox(img, SPL_RULES_SVG) +
+        '<div style="font-size:20px;font-weight:800;margin-top:14px">প্ল্যাটফর্মের নিয়ম</div>' +
+        '<div id="splRulesText" style="font-size:14px;color:#444;line-height:1.75;margin-top:10px;white-space:pre-wrap"></div></div>';
+      const o = splOverlay(html);
+      o.querySelector('#splRulesText').textContent = text;
+    }
+    function openChangePasswordModal() {
+      const field = (id, label) => '<div style="margin-top:12px"><div style="font-size:13px;color:#6b6480;margin-bottom:6px">' + label + '</div><input id="' + id + '" type="password" autocomplete="off" style="width:100%;border:1px solid var(--border-color);border-radius:14px;padding:13px 14px;font-size:15px;background:var(--bg-card);color:var(--text-dark);font-family:inherit;box-sizing:border-box"></div>';
+      const html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><button onclick="splCloseOverlay()" style="width:40px;height:40px;border-radius:50%;background:var(--bg-card);border:1px solid var(--border-color);color:var(--primary-red);cursor:pointer">' + SPL_ICO('<path d="M15 18l-6-6 6-6"/>') + '</button></div>' +
+        '<div style="background:var(--bg-card);border-radius:20px;padding:16px"><div style="font-size:18px;font-weight:800">পাসওয়ার্ড পরিবর্তন</div>' +
+        field('splPwOld', 'আগের পাসওয়ার্ড') + field('splPwNew', 'নতুন পাসওয়ার্ড') + field('splPwConfirm', 'নতুন পাসওয়ার্ড আবার লিখুন') +
+        '<div id="splPwMsg" style="color:#dc2626;font-size:13px;margin-top:10px;min-height:18px"></div>' +
+        '<button onclick="splSubmitPassword()" style="margin-top:12px;width:100%;background:var(--primary-red);color:#fff;border:0;border-radius:999px;padding:14px;font-weight:700;font-size:15px;cursor:pointer;font-family:inherit">কনফার্ম</button></div>';
+      splOverlay(html);
+    }
+    async function splSubmitPassword() {
+      if (!currentUser) return;
+      const oldP = document.getElementById('splPwOld').value;
+      const newP = document.getElementById('splPwNew').value;
+      const confirmP = document.getElementById('splPwConfirm').value;
+      const msg = document.getElementById('splPwMsg');
+      msg.textContent = '';
+      if (oldP !== String(currentUser.password || '')) { msg.textContent = 'আগের পাসওয়ার্ড সঠিক নয়।'; return; }
+      if (newP.length < 4) { msg.textContent = 'নতুন পাসওয়ার্ড কমপক্ষে ৪ অক্ষর হতে হবে।'; return; }
+      if (newP !== confirmP) { msg.textContent = 'নতুন পাসওয়ার্ড দুটি মিলছে না।'; return; }
+      try {
+        await db.ref('users').child(currentUser.phone).update({ password: newP });
+        currentUser.password = newP;
+        splCloseOverlay();
+        showAlert('পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে।');
+      } catch (e) {
+        msg.textContent = 'পাসওয়ার্ড পরিবর্তন করা যায়নি, আবার চেষ্টা করুন।';
+      }
+    }
+
     function updateHomeDashboard() {
       if (!currentUser) return;
       const balance = Number(currentUser.balance || 0);
-      const name = currentUser.name || 'সদস্য';
+      const name = currentUser.phone || currentUser.name || 'সদস্য';
       const phone = currentUser.phone || '';
       const investments = currentUser.investments ? Object.values(currentUser.investments) : [];
       const activeInvestments = investments.filter(item => {
@@ -4130,6 +4363,9 @@ button,.modal-btn,.recharge-method,.recharge-quick button,.history-tabs button,.
       put('homeDailyIncome', dailyIncome.toFixed(2));
       put('homeTotalDeposit', totalDeposit.toFixed(2));
       put('homeActivePlanCount', String(activeInvestments.length));
+      put('mePlanCount', String(activeInvestments.length));
+      put('meDailyIncome', dailyIncome.toFixed(2));
+      put('meTotalDeposit', totalDeposit.toFixed(2));
       const dateEl = document.getElementById('homeDateLabel');
       if (dateEl) dateEl.textContent = new Date().toLocaleDateString('en-US', {weekday:'short', day:'2-digit', month:'short'}).toUpperCase() + ' • SPL';
     }

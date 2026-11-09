@@ -38,10 +38,40 @@ if (!admin.apps.length) {
 }
 const db = admin.database();
 
+// অ্যাডমিন যাচাই: শুধু ADMIN_UIDS-এ থাকা Firebase UID-রাই অ্যাডমিন API ব্যবহার করতে পারবে।
+const ADMIN_UID_SET = new Set((process.env.ADMIN_UIDS || "").split(",").map(s => s.trim()).filter(Boolean));
+async function requireAdmin(req, res, next) {
+  try {
+    const header = String(req.headers.authorization || "");
+    const token = header.startsWith("Bearer ") ? header.slice(7) : "";
+    if (!token) return res.status(401).json({ message: "আগে অ্যাডমিন হিসেবে লগইন করুন" });
+    const decoded = await admin.auth().verifyIdToken(token);
+    if (!ADMIN_UID_SET.has(decoded.uid)) return res.status(403).json({ message: "এই অ্যাকাউন্টের অ্যাডমিন অনুমতি নেই" });
+    req.adminUid = decoded.uid;
+    return next();
+  } catch (e) {
+    return res.status(401).json({ message: "সেশন যাচাই ব্যর্থ, আবার লগইন করুন" });
+  }
+}
+
 function methodCode(method) {
   return ({ bkash: "BKASH", nagad: "NAGAD", rocket: "ROCKET" })[String(method || "").toLowerCase()];
 }
 function validPhone(phone) { return /^01[3-9]\d{8}$/.test(String(phone || "")); }
+
+// রেফারেল কোডের প্রথম ৩ অক্ষর "SPL" স্থায়ী; এটি বদলানো যাবে না।
+const REFERRAL_PREFIX = "SPL";
+async function makeReferralCode(requested) {
+  const useRequested = /^SPL\d{5}$/.test(requested);
+  for (let attempt = 0; attempt < 30; attempt++) {
+    const code = (useRequested && attempt === 0)
+      ? requested
+      : REFERRAL_PREFIX + String(Math.floor(10000 + Math.random() * 90000));
+    const taken = await db.ref("users").orderByChild("referralCode").equalTo(code).once("value");
+    if (!taken.exists()) return code;
+  }
+  throw new Error("রেফারেল কোড তৈরি করা যায়নি");
+}
 
 
 async function getSiteSettings() {
@@ -58,7 +88,7 @@ async function creditReferralCommissions(userPhone, baseAmount, sourceId) {
   let parentCode = userSnap.val()?.invitedByCode || null;
   const settings = await getSiteSettings();
   const rates = (Array.isArray(settings.referral_commission_rates)
-    ? settings.referral_commission_rates : [10, 2, 1])
+    ? settings.referral_commission_rates : [12, 2, 1])
     .slice(0, 3).map(v => Math.max(0, Number(v) || 0) / 100);
 
   for (let level = 0; level < rates.length && parentCode; level++) {
@@ -150,7 +180,7 @@ async function creditDueEarningsForUser(userPhone) {
       }
       changed = true;
     }
-    return changed ? user : user;
+    return user;
   });
   return !!result.committed;
 }
@@ -184,7 +214,8 @@ app.post("/api/register", async (req, res) => {
 
     const settings = await getSiteSettings();
     const bonus = Math.max(0, Number(settings.registration_bonus ?? 50));
-    const referralCode = `SPL${phone.slice(-4)}${crypto.randomBytes(2).toString("hex").toUpperCase()}`;
+    const requestedCode = String(req.body.referralCode || "").trim().toUpperCase();
+    const referralCode = await makeReferralCode(requestedCode);
     const userData = {
       name, phone, password, referralCode, invitedByCode,
       balance: bonus, registrationBonus: bonus, spinTickets: 0, deviceId,
@@ -228,6 +259,24 @@ app.post("/api/nekpay/notify", async (_req, res) => {
   // Never credit user balance until official signature, merchant, order, amount,
   // paid status and one-time/idempotency validation are implemented.
   return res.status(503).send("NEKPAY_CALLBACK_NOT_CONFIGURED");
+});
+
+// অ্যাডমিন: ইউজারের পাসওয়ার্ড বদলানো (অ্যাডমিন প্যানেল থেকে)
+app.post("/api/admin/users/:phone/password", requireAdmin, async (req, res) => {
+  try {
+    const phone = String(req.params.phone || "").trim();
+    const password = String(req.body.password || "").trim();
+    if (!validPhone(phone)) return res.status(400).json({ message: "সঠিক মোবাইল নম্বর দিন" });
+    if (password.length < 4) return res.status(400).json({ message: "পাসওয়ার্ড কমপক্ষে ৪ অক্ষর হতে হবে" });
+    const ref = db.ref(`users/${phone}`);
+    const snap = await ref.once("value");
+    if (!snap.exists()) return res.status(404).json({ message: "ইউজার পাওয়া যায়নি" });
+    await ref.update({ password });
+    return res.json({ ok: true });
+  } catch (e) {
+    console.error("admin password error:", e);
+    return res.status(500).json({ message: "পাসওয়ার্ড বদলানো যায়নি" });
+  }
 });
 
 app.get("/health", (_req, res) => res.json({ ok: true, service: "SPL User Backend", paymentGateway: "NEKpay", adapterReady: false }));
