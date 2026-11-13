@@ -2790,7 +2790,7 @@ window.splApplyCms=function(s){try{TM=new Map();RM=new Map();BS=new Map();
           ?? editableTexts.referral_promo_text;
         const shareVal = settings.referral_share_text ?? settings.referralShareText ?? editableTexts.referralShareText;
         const cleanPromo = (typeof shareVal === 'string' && shareVal.trim()) ? shareVal.trim() : (typeof promoValue === 'string' ? promoValue.trim() : '');
-        promo.textContent = cleanPromo || `রেফার করা ইউজার ডিপোজিট করলে আপনি ডিপোজিটের ${pct}% কমিশন পাবেন।`;
+        promo.textContent = cleanPromo || `রেফার করা ইউজার প্যাকেজ কিনলে আপনি প্যাকেজ মূল্যের ${pct}% কমিশন পাবেন।`;
       }
       window.splApplyCms&&window.splApplyCms(settings);
       const colors=settings.page_colors||{};
@@ -2958,21 +2958,21 @@ window.splApplyCms=function(s){try{TM=new Map();RM=new Map();BS=new Map();
     }
 
     // ব্যাকগ্রাউন্ড ডেটা লোড
-    db.ref('packages').on('value', (snapshot) => {
+    db.ref('packages').once('value').then((snapshot) => {
       const val = snapshot.val();
-      packagesConfig = val ? Object.values(val) : [];
+      if (val) packagesConfig = Object.values(val);
       renderPackages();
-    }, e => console.log(e));
+    }).catch(e => console.log(e));
 
     db.ref('gateways').once('value').then((snapshot) => {
       const val = snapshot.val();
       if (val) paymentDetails = val;
     }).catch(e => console.log(e));
 
-    db.ref('support_links').on('value', (snapshot) => {
+    db.ref('support_links').once('value').then((snapshot) => {
       const val = snapshot.val();
       if (val) supportLinks = val;
-    }, e => console.log(e));
+    }).catch(e => console.log(e));
 
     db.ref('app_download_link').once('value').then((snapshot) => {
       const val = snapshot.val();
@@ -3419,14 +3419,13 @@ window.splApplyCms=function(s){try{TM=new Map();RM=new Map();BS=new Map();
       const sumDeposit = (u) => Object.values(u.deposits || {}).reduce((a, d) => a + (isOk(d && d.status) ? Number(d.amount || 0) : 0), 0);
       const sumWithdraw = (u) => Object.values(u.withdrawals || {}).reduce((a, w) => a + (isOk(w && w.status) ? Number(w.amount || 0) : 0), 0);
       const setT = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-      let total = 0, totalInvest = 0, totalEarnedAll = 0;
+      let total = 0, totalInvest = 0;
       levels.forEach((arr, idx) => {
         const n = idx + 1;
         const inv = arr.reduce((a, u) => a + sumInvest(u), 0);
         const dep = arr.reduce((a, u) => a + sumDeposit(u), 0);
         const wd = arr.reduce((a, u) => a + sumWithdraw(u), 0);
-        const earned = logs.filter(l => Number(l.level) === n).reduce((a, l) => a + Number(l.amount ?? l.commission ?? 0), 0);
-        totalEarnedAll += earned;
+        const earned = logs.filter(l => Number(l.level) === n).reduce((a, l) => a + Number(l.amount || 0), 0);
         total += arr.length; totalInvest += inv;
         setT('lvl' + n + 'Members', arr.length);
         setT('c' + n + 'Members', arr.length);
@@ -3449,7 +3448,7 @@ window.splApplyCms=function(s){try{TM=new Map();RM=new Map();BS=new Map();
       const rateTags = document.querySelectorAll('.level-percent-tag');
       rateTags.forEach((el, i) => { el.textContent = (Number(rates[i]) || 0) + '%'; });
       setT('topTeamSizeVal', total);
-      setT('topTotalInvestVal', totalEarnedAll.toFixed(2));
+      setT('topTotalInvestVal', totalInvest.toFixed(2));
       setT('teamInvestTotal', totalInvest.toFixed(2));
     }
     function updateTeamScreenData() {
@@ -3463,6 +3462,78 @@ window.splApplyCms=function(s){try{TM=new Map();RM=new Map();BS=new Map();
       document.getElementById('referralCodeInput').value = refCode;
       const slt = document.getElementById('referralShareLinkText'); if (slt) slt.textContent = refLink;
 
+      db.ref('users').once('value', (snapshot) => {
+        const users = snapshot.val();
+        if (!users) return;
+        const usersArr = Object.values(users);
+
+        const lvl1Arr = usersArr.filter(u => u.invitedByCode === currentUser.referralCode);
+        const lvl1Codes = lvl1Arr.map(u => u.referralCode).filter(Boolean);
+
+        const lvl2Arr = usersArr.filter(u => u.invitedByCode && lvl1Codes.includes(u.invitedByCode));
+        const lvl2Codes = lvl2Arr.map(u => u.referralCode).filter(Boolean);
+
+        const lvl3Arr = usersArr.filter(u => u.invitedByCode && lvl2Codes.includes(u.invitedByCode));
+
+        const getStats = (arr, rate) => {
+          let depSum = 0;
+          let withSum = 0;
+          let invSum = 0;
+          arr.forEach(u => {
+            if (u.deposits) {
+              Object.values(u.deposits).forEach(d => {
+                if (d.status === 'সফল') depSum += Number(d.amount || 0);
+              });
+            }
+            if (u.withdrawals) {
+              Object.values(u.withdrawals).forEach(w => {
+                if (w.status === 'সফল') withSum += Number(w.amount || 0);
+              });
+            }
+            if (u.investments) {
+              Object.values(u.investments).forEach(inv => {
+                invSum += Number(inv.cost || 0);
+              });
+            }
+          });
+          return {
+            count: arr.length,
+            deposit: depSum,
+            withdrawal: withSum,
+            invest: invSum,
+            commission: depSum * rate
+          };
+        };
+
+        const rates = (window.splReferralRates || [12, 2, 1]).map(v => Math.max(0, Number(v) || 0) / 100);
+        const s1 = getStats(lvl1Arr, rates[0] ?? 0);
+        const s2 = getStats(lvl2Arr, rates[1] ?? 0);
+        const s3 = getStats(lvl3Arr, rates[2] ?? 0);
+
+        const totalMembers = s1.count + s2.count + s3.count;
+        const totalInvest = s1.invest + s2.invest + s3.invest;
+
+        document.getElementById('topTeamSizeVal').textContent = totalMembers;
+        document.getElementById('topTotalInvestVal').textContent = '৳ ' + totalInvest;
+
+        document.getElementById('lvl1Members').textContent = s1.count;
+        document.getElementById('lvl1Deposit').textContent = '৳ ' + s1.deposit;
+        document.getElementById('lvl1Comm').textContent = '৳ ' + s1.commission.toFixed(1);
+        document.getElementById('lvl1With').textContent = '৳ ' + s1.withdrawal;
+    document.getElementById('lvl1Invest').textContent = '৳ ' + s1.invest;
+
+        document.getElementById('lvl2Members').textContent = s2.count;
+        document.getElementById('lvl2Deposit').textContent = '৳ ' + s2.deposit;
+        document.getElementById('lvl2Comm').textContent = '৳ ' + s2.commission.toFixed(1);
+        document.getElementById('lvl2With').textContent = '৳ ' + s2.withdrawal;
+    document.getElementById('lvl2Invest').textContent = '৳ ' + s2.invest;
+
+        document.getElementById('lvl3Members').textContent = s3.count;
+        document.getElementById('lvl3Deposit').textContent = '৳ ' + s3.deposit;
+        document.getElementById('lvl3Comm').textContent = '৳ ' + s3.commission.toFixed(1);
+        document.getElementById('lvl3With').textContent = '৳ ' + s3.withdrawal;
+    document.getElementById('lvl3Invest').textContent = '৳ ' + s3.invest;
+      });
     }
 
     function openLevelMembersModal(level) {
@@ -4269,7 +4340,7 @@ window.splApplyCms=function(s){try{TM=new Map();RM=new Map();BS=new Map();
     function dhakaDateKey(date = new Date()) { return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Dhaka',year:'numeric',month:'2-digit',day:'2-digit'}).format(date); }
     function formatWithdrawalTime(value) { const [h,m]=String(value||'10:00').split(':').map(Number); const ap=h>=12?'বিকেল':'সকাল'; const hh=h%12||12; return ap+' '+String(hh).padStart(2,'0')+':'+String(m||0).padStart(2,'0'); }
     function isWithinWithdrawalHours() { const [h,m]=dhakaClockParts(); const now=h*60+m; const [sh,sm]=(window.splWithdrawStart||'10:00').split(':').map(Number); const [eh,em]=(window.splWithdrawEnd||'17:00').split(':').map(Number); return now>=sh*60+sm && now<eh*60+em; }
-    async function getTodayWithdrawalCount(user) { const records=Object.values(user.withdrawals||{}); const today=dhakaDateKey(); return records.filter(w=>{const t=Number(w.createdAt||0); return t>0 && dhakaDateKey(new Date(t))===today && !['বাতিল','ব্যর্থ','rejected','failed'].includes(String(w.status||'').toLowerCase());}).length; }
+    async function getTodayWithdrawalCount(user) { const records=Object.values(user.withdrawals||{}); const today=dhakaDateKey(); return records.filter(w=>{const t=Number(w.createdAt||0); return t>0 && dhakaDateKey(new Date(t))===today && !['বাতিল','rejected','failed'].includes(String(w.status||'').toLowerCase());}).length; }
 
     // শুধু উত্তোলন ফর্ম খোলার জন্য; হিস্টোরি দেখানোর কোনো কাজ এখানে নেই।
     function openWithdrawalFormOnly() {
@@ -4423,25 +4494,15 @@ window.splApplyCms=function(s){try{TM=new Map();RM=new Map();BS=new Map();
     function proceedWithdrawProcess(amount) {
  const fee=amount*(Number(window.splWithdrawalFeePercent ?? 10)/100), netAmount=amount-fee;
  const key=db.ref('withdrawal_requests').push().key;
- const phone=currentUser.phone;
- const request={id:key,userPhone:phone,userName:currentUser.name||'',amount,fee,netAmount,
+ const request={id:key,userPhone:currentUser.phone,userName:currentUser.name||'',amount,fee,netAmount,
  method:currentUser.withdrawAccount?.method||'bkash',accountName:currentUser.withdrawAccount?.name||'',
- accountNumber:currentUser.withdrawAccount?.number||'',status:'পেন্ডিং',balanceDeducted:true,
+ accountNumber:currentUser.withdrawAccount?.number||'',status:'পেন্ডিং',
  createdAt:Date.now(),date:new Date().toLocaleDateString(currentLang === 'EN' ? 'en-GB' : 'bn-BD')};
- // 1) balance is deducted first (atomic), 2) request is stored. Admin reject refunds it.
- db.ref('users/'+phone+'/balance').transaction(b=>{ if(b===null) return b; b=Number(b||0); if(b+0.0001<amount) return; return Math.round((b-amount)*100)/100; }).then(res=>{
-  if(!res.committed){ showAlert('আপনার ওয়ালেটে পর্যাপ্ত ব্যালেন্স নেই!'); return; }
-  currentUser.balance = Number(res.snapshot.val()||0);
-  const updates={}; updates['withdrawal_requests/'+key]=request; updates['users/'+phone+'/withdrawals/'+key]=request;
-  return db.ref().update(updates).then(()=>{
-    closeModal('withdrawAmountModal');document.getElementById('withdrawInput').value='';document.getElementById('withdrawLoginPassword').value='';
-    updateBalanceDisplay();
-    showAlert('আপনার উত্তোলন অনুরোধ সফলভাবে জমা হয়েছে।');
-  }).catch(()=>{
-    db.ref('users/'+phone+'/balance').transaction(b=>Number(b||0)+amount);
-    showAlert('রিকোয়েস্ট জমা হয়নি, আবার চেষ্টা করুন!');
-  });
- }).catch(()=>showAlert('রিকোয়েস্ট জমা হয়নি, আবার চেষ্টা করুন!'));
+ const updates={}; updates['withdrawal_requests/'+key]=request; updates['users/'+currentUser.phone+'/withdrawals/'+key]=request;
+ db.ref().update(updates).then(()=>{
+  closeModal('withdrawAmountModal');document.getElementById('withdrawInput').value='';document.getElementById('withdrawLoginPassword').value='';
+  showAlert('আপনার উত্তোলন অনুরোধ সফলভাবে জমা হয়েছে।');
+ }).catch(()=>showAlert('রিকোয়েস্ট জমা হয়নি, আবার চেষ্টা করুন!'));
 }
 
     function openSupportLink(type) {
