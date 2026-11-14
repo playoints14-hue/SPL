@@ -13,9 +13,12 @@ const MCH_ID = String(process.env.NEKPAY_MCH_ID || "808258224");
 const API_SECRET = process.env.NEKPAY_PAYMENT_KEY;
 const BASE_URL = (process.env.NEKPAY_API_URL || "").replace(/\/$/, "");
 const PUBLIC_URL = (process.env.PUBLIC_URL || "").replace(/\/$/, "");
+const ADMIN_SECRET = process.env.ADMIN_SECRET || "";
 
 if (!API_SECRET) console.warn("WARNING: NEKPAY_PAYMENT_KEY is missing");
 if (!PUBLIC_URL) console.warn("WARNING: PUBLIC_URL is missing");
+if (!ADMIN_SECRET) console.warn("WARNING: ADMIN_SECRET is missing, admin actions disabled");
+
 if (!admin.apps.length) {
   let serviceAccount;
   if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
@@ -37,12 +40,9 @@ if (!admin.apps.length) {
 }
 const db = admin.database();
 
-function methodCode(method) {
-  return ({ bkash: "BKASH", nagad: "NAGAD", rocket: "ROCKET" })[String(method || "").toLowerCase()];
-}
 function validPhone(phone) { return /^01[3-9]\d{8}$/.test(String(phone || "")); }
 
-// রেফারেল কোডের প্রথম ৩ অক্ষর "SPL" স্থায়ী; এটি বদলানো যাবে না।
+// ---------------- Helpers ----------------
 const REFERRAL_PREFIX = "SPL";
 async function makeReferralCode(requested) {
   const useRequested = /^SPL\d{5}$/.test(requested);
@@ -55,7 +55,6 @@ async function makeReferralCode(requested) {
   }
   throw new Error("রেফারেল কোড তৈরি করা যায়নি");
 }
-
 
 async function getSiteSettings() {
   const snap = await db.ref("site_settings").once("value");
@@ -115,7 +114,6 @@ async function creditDueEarningsForUser(userPhone) {
     if (!user?.investments) return user;
     const nowMs = Date.now();
     const dayMs = 24 * 60 * 60 * 1000;
-    let changed = false;
 
     for (const [id, raw] of Object.entries(user.investments)) {
       const inv = raw || {};
@@ -151,8 +149,7 @@ async function creditDueEarningsForUser(userPhone) {
       user.earningLogs = user.earningLogs || {};
       for (let i = 1; i <= periods; i++) {
         const at = lastClaim + i * dayMs;
-        const logKey = `${id}_${at}`;
-        user.earningLogs[logKey] = {
+        user.earningLogs[`${id}_${at}`] = {
           investmentId: id,
           packageId: inv.packageId || null,
           title: inv.title || "প্ল্যান",
@@ -161,7 +158,6 @@ async function creditDueEarningsForUser(userPhone) {
           source: "auto_24h"
         };
       }
-      changed = true;
     }
     return user;
   });
@@ -172,7 +168,7 @@ async function processAllDueEarnings() {
   try {
     const snap = await db.ref("users").once("value");
     const users = snap.val() || {};
-    for (const [phone, user] of Object.entries(users)) {
+    for (const phone of Object.keys(users)) {
       try { await creditDueEarningsForUser(phone); } catch (e) { console.error("earning worker", phone, e); }
     }
   } catch (e) {
@@ -180,7 +176,7 @@ async function processAllDueEarnings() {
   }
 }
 
-
+// ---------------- Register ----------------
 app.post("/api/register", async (req, res) => {
   try {
     const name = String(req.body.name || "").trim();
@@ -189,11 +185,11 @@ app.post("/api/register", async (req, res) => {
     const invitedByCode = String(req.body.invitedByCode || "").trim() || null;
     const deviceId = String(req.body.deviceId || "").trim();
     if (!name || !validPhone(phone) || password.length < 4) {
-      return res.status(400).json({ message: "সঠিক নাম, মোবাইল নম্বর ও পাসওয়ার্ড দিন" });
+      return res.status(400).json({ message: "সঠিক নাম, মোবাইল নম্বর ও পাসওয়ার্ড দিন" });
     }
     const userRef = db.ref(`users/${phone}`);
     const exists = await userRef.once("value");
-    if (exists.exists()) return res.status(409).json({ message: "এই মোবাইল নম্বর দিয়ে ইতিমধ্যে অ্যাকাউন্ট খোলা হয়েছে!" });
+    if (exists.exists()) return res.status(409).json({ message: "এই মোবাইল নম্বর দিয়ে ইতিমধ্যে অ্যাকাউন্ট খোলা হয়েছে!" });
 
     const settings = await getSiteSettings();
     const bonus = Math.max(0, Number(settings.registration_bonus ?? 50));
@@ -209,20 +205,21 @@ app.post("/api/register", async (req, res) => {
     return res.json({ ok: true, bonus, referralCode });
   } catch (e) {
     console.error("registration error:", e);
-    return res.status(500).json({ message: "নিবন্ধন করা যায়নি" });
+    return res.status(500).json({ message: "নিবন্ধন করা যায়নি" });
   }
 });
 
-
-// ---------------- NEKpay deposit (collect) adapter ----------------
-// শুধু ডিপোজিট (代收)। অটো পেআউট/উত্তোলন নেই; উত্তোলন অ্যাডমিন নিজে ম্যানুয়ালি দেবেন।
+// ---------------- NEKpay deposit (collect) ----------------
 app.set("trust proxy", true);
-const PAY_TYPES = { bkash: process.env.NEKPAY_PAYTYPE_BKASH || "2222", nagad: process.env.NEKPAY_PAYTYPE_NAGAD || "2221" };
+const PAY_TYPES = {
+  bkash: process.env.NEKPAY_PAYTYPE_BKASH || "2222",
+  nagad: process.env.NEKPAY_PAYTYPE_NAGAD || "2221"
+};
 const CALLBACK_IP = String(process.env.NEKPAY_CALLBACK_IP || "").trim();
 const COLLECT_URL = (process.env.NEKPAY_API_URL || "https://api.nekpayment.com/pay/web").trim();
 
-// NEKpay docs: sort parameter names by ASCII, omit sign/sign_type and empty values, append &key=PAYMENT_KEY, then MD5 lowercase.
-// (প্রচলিত নিয়ম; NEKpay ডকের সাথে না মিললে শুধু এই ফাংশন বদলাবেন।)
+// NEKpay সাইন: প্যারামিটার ASCII অনুসারে সাজিয়ে, sign/sign_type ও খালি মান বাদ দিয়ে,
+// শেষে &key=PAYMENT_KEY যোগ করে MD5 (lowercase)। NEKpay ডকের সাথে না মিললে এই ফাংশন বদলান।
 function nekSign(params) {
   const str = Object.keys(params)
     .filter(k => k !== "sign" && k !== "sign_type" && k !== "signType" && params[k] !== undefined && params[k] !== null && String(params[k]) !== "")
@@ -231,12 +228,14 @@ function nekSign(params) {
     .join("&") + `&key=${API_SECRET}`;
   return crypto.createHash("md5").update(str, "utf8").digest("hex").toLowerCase();
 }
+
 function safeEq(a, b) {
   const x = Buffer.from(String(a).toUpperCase()), y = Buffer.from(String(b).toUpperCase());
   return x.length === y.length && crypto.timingSafeEqual(x, y);
 }
+
 function nowBD() {
-  const d = new Date(Date.now() + 6 * 3600 * 1000); // নেটওয়ার্ক সময় UTC+6 ধরা হয়েছে; প্রয়োজনে বদলান
+  const d = new Date(Date.now() + 6 * 3600 * 1000);
   return d.toISOString().slice(0, 19).replace("T", " ");
 }
 
@@ -246,9 +245,12 @@ app.post("/api/nekpay/collect", async (req, res) => {
     const amount = Number(req.body.amount);
     const payType = PAY_TYPES[String(req.body.method || "").toLowerCase()];
     if (!validPhone(userPhone)) return res.status(400).json({ message: "সঠিক মোবাইল নম্বর পাওয়া যায়নি" });
-    if (!Number.isFinite(amount) || amount < 100 || amount > 50000) return res.status(400).json({ message: "পেমেন্ট পরিমাণ ১০০ থেকে ৫০,০০০ টাকার মধ্যে দিন" });
+    if (!Number.isFinite(amount) || amount < 100 || amount > 50000) {
+      return res.status(400).json({ message: "পেমেন্ট পরিমাণ ১০০ থেকে ৫০,০০০ টাকার মধ্যে দিন" });
+    }
     if (!payType) return res.status(400).json({ message: "সমর্থিত পেমেন্ট মেথড নির্বাচন করুন" });
     if (!API_SECRET || !MCH_ID || !PUBLIC_URL) return res.status(503).json({ message: "NEKpay কনফিগারেশন অসম্পূর্ণ।" });
+
     const userSnap = await db.ref(`users/${userPhone}`).once("value");
     if (!userSnap.exists()) return res.status(404).json({ message: "ইউজার অ্যাকাউন্ট পাওয়া যায়নি" });
 
@@ -265,24 +267,34 @@ app.post("/api/nekpay/collect", async (req, res) => {
     params.sign = nekSign(params);
     params.sign_type = "MD5";
 
-    await db.ref(`nekpay_orders/${orderId}`).set({ userPhone, amount: Number(tradeAmount), method: req.body.method, payType, status: "pending", createdAt: Date.now() });
-    // অ্যাডমিন যাতে অবশ্যই দেখতে পায়: ইউজারের ডিপোজিট লিস্টে "অপেক্ষমাণ" রেকর্ড সার্ভার নিজেই লেখে
+    await db.ref(`nekpay_orders/${orderId}`).set({
+      userPhone, amount: Number(tradeAmount), method: req.body.method, payType,
+      status: "pending", createdAt: Date.now()
+    });
     await db.ref(`users/${userPhone}/deposits/${orderId}`).set({
       amount: Number(tradeAmount), method: String(req.body.method || ""), status: "অপেক্ষমাণ",
       out_trade_no: orderId, trxId: orderId, createdAt: Date.now(),
-      date: new Date().toLocaleDateString("bn-BD", { timeZone: "Asia/Dhaka" })
+      date: new Date(Date.now() + 6 * 3600 * 1000).toISOString().slice(0, 10)
     });
 
-    const r = await fetch(COLLECT_URL, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(params).toString() });
+    const r = await fetch(COLLECT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams(params).toString()
+    });
     const text = await r.text();
     let data = {};
     try { data = JSON.parse(text); } catch (_) {}
     console.log("NEKpay collect response:", orderId, "payType=" + payType, text.slice(0, 500));
+
     const paymentUrl = data.payInfo || data.pay_info || data.payUrl || data.pay_url || data.url;
     const ok = String(data.respCode || data.resp_code || "").toUpperCase() === "SUCCESS" || !!paymentUrl;
     if (!ok || !paymentUrl) {
       await db.ref(`nekpay_orders/${orderId}`).update({ status: "failed", reason: text.slice(0, 300) });
-      return res.status(502).json({ message: "NEKpay উত্তর: " + (data.tradeMsg || data.errorMsg || data.error_msg || data.msg || text.slice(0, 160) || ("HTTP " + r.status)) });
+      await db.ref(`users/${userPhone}/deposits/${orderId}`).update({ status: "ব্যর্থ" });
+      return res.status(502).json({
+        message: "NEKpay উত্তর: " + (data.tradeMsg || data.errorMsg || data.error_msg || data.msg || text.slice(0, 160) || ("HTTP " + r.status))
+      });
     }
     return res.json({ ok: true, orderId, paymentUrl });
   } catch (e) {
@@ -291,14 +303,189 @@ app.post("/api/nekpay/collect", async (req, res) => {
   }
 });
 
-// অটো-অ্যাপ্রুভ বন্ধ: ডিপোজিট অ্যাডমিন নিজে মার্চেন্ট ড্যাশবোর্ড দেখে Approve/Reject করেন।
-// গেটওয়ের কলব্যাক শুধু লগ হয়, ব্যালেন্স যোগ হয় না (ডাবল ক্রেডিট ঠেকাতে)।
-app.all("/api/nekpay/notify", (req, res) => {
-  console.log("NEKpay notify (ignored, manual approval mode):", JSON.stringify({ ...req.query, ...req.body }).slice(0, 500));
-  res.send("success");
+// ---------------- NEKpay notify (ডিপোজিট অটো-ক্রেডিট) ----------------
+app.all("/api/nekpay/notify", async (req, res) => {
+  try {
+    const p = { ...req.query, ...req.body };
+    console.log("NEKpay notify:", JSON.stringify(p).slice(0, 800));
+
+    // IP চেক (NEKPAY_CALLBACK_IP সেট থাকলে)
+    const remoteIp = String(req.headers["x-forwarded-for"] || req.ip || "").split(",")[0].trim();
+    if (CALLBACK_IP && remoteIp !== CALLBACK_IP) {
+      console.warn("NEKpay notify from unexpected IP:", remoteIp);
+      return res.send("fail");
+    }
+
+    // সিগনেচার যাচাই
+    const given = String(p.sign || "");
+    if (!given || !safeEq(given, nekSign(p))) {
+      console.warn("NEKpay notify: bad signature");
+      return res.send("fail");
+    }
+
+    const orderId = String(p.mch_order_no || "");
+    if (!orderId) return res.send("fail");
+    const orderRef = db.ref(`nekpay_orders/${orderId}`);
+    const order = (await orderRef.once("value")).val();
+    if (!order) return res.send("fail");
+
+    // সফল স্ট্যাটাস (NEKpay ডকের সাথে মিলিয়ে নিন; লগের নোটিফাই লাইন দেখে ফিল্ডের নাম ঠিক করুন)
+    const status = String(p.trade_status || p.status || "").toUpperCase();
+    const isPaid = ["SUCCESS", "PAID", "1"].includes(status);
+    if (!isPaid) {
+      await orderRef.update({ gatewayStatus: status, updatedAt: Date.now() });
+      return res.send("success");
+    }
+
+    // পরিমাণ মিলছে কিনা
+    const paidAmount = Number(p.trade_amount ?? p.amount);
+    if (!Number.isFinite(paidAmount) || Math.abs(paidAmount - Number(order.amount)) > 0.01) {
+      await orderRef.update({ status: "amount_mismatch", paidAmount, updatedAt: Date.now() });
+      return res.send("fail");
+    }
+
+    // একবারই ক্রেডিট: pending থেকে credited
+    const claim = await orderRef.child("status").transaction(cur =>
+      cur === "pending" ? "credited" : undefined
+    );
+    if (!claim.committed) return res.send("success");
+
+    const userPhone = order.userPhone;
+    await db.ref(`users/${userPhone}/balance`).transaction(b =>
+      Number((Number(b || 0) + Number(order.amount)).toFixed(2))
+    );
+    await db.ref(`users/${userPhone}/deposits/${orderId}`).update({
+      status: "সফল",
+      confirmedAt: Date.now(),
+      trxId: String(p.trade_no || p.transaction_id || orderId)
+    });
+    await orderRef.update({ confirmedAt: Date.now(), gatewayStatus: status });
+
+    await creditReferralCommissions(userPhone, order.amount, orderId);
+    return res.send("success");
+  } catch (e) {
+    console.error("NEKpay notify error:", e);
+    return res.send("fail");
+  }
 });
 
-app.get("/health", (_req, res) => res.json({ ok: true, service: "SPL User Backend", paymentGateway: "NEKpay", adapterReady: !!API_SECRET }));
+// ---------------- Withdraw (ব্যালেন্স সার্ভারে কাটা) ----------------
+app.post("/api/withdraw", async (req, res) => {
+  let deducted = 0, userPhone = "";
+  try {
+    userPhone = String(req.body.userPhone || "").trim();
+    const password = String(req.body.password || "");
+    const amount = Number(req.body.amount);
+    if (!validPhone(userPhone)) return res.status(400).json({ message: "সঠিক মোবাইল নম্বর নেই" });
+
+    const settings = await getSiteSettings();
+    const min = Math.max(1, Number(settings.withdrawal_min_amount ?? settings.minimum_withdrawal ?? 150));
+    const max = Math.max(min, Number(settings.withdrawal_max_amount ?? 500000));
+    const feePct = Math.min(100, Math.max(0, Number(settings.withdrawal_fee_percent ?? 10)));
+    if (!Number.isFinite(amount) || amount < min || amount > max) {
+      return res.status(400).json({ message: `উত্তোলনের পরিমাণ ${min} থেকে ${max} টাকার মধ্যে দিন` });
+    }
+
+    const user = (await db.ref(`users/${userPhone}`).once("value")).val();
+    if (!user) return res.status(404).json({ message: "ইউজার পাওয়া যায়নি" });
+    if (user.password !== password) return res.status(401).json({ message: "লগইন পাসওয়ার্ড সঠিক নয়!" });
+    if (user.isBanned || user.withdrawalDisabled) return res.status(403).json({ message: "এই অ্যাকাউন্টে উত্তোলন বন্ধ" });
+    if (!user.investments || Object.keys(user.investments).length === 0) {
+      return res.status(403).json({ message: "উত্তোলনের আগে কমপক্ষে একটি প্ল্যান কিনুন" });
+    }
+    if (!user.withdrawAccount || !user.withdrawAccount.number) {
+      return res.status(400).json({ message: "আগে পেমেন্ট অ্যাকাউন্ট সেটআপ করুন" });
+    }
+
+    const fee = Number((amount * feePct / 100).toFixed(2));
+    const net = Number((amount - fee).toFixed(2));
+
+    // ব্যালেন্স থেকে কাটা; পর্যাপ্ত না থাকলে কাটবে না
+    const tx = await db.ref(`users/${userPhone}/balance`).transaction(b => {
+      const cur = Number(b || 0);
+      if (cur < amount) return; // abort
+      return Number((cur - amount).toFixed(2));
+    });
+    if (!tx.committed) return res.status(400).json({ message: "আপনার ওয়ালেটে পর্যাপ্ত ব্যালেন্স নেই!" });
+    deducted = amount;
+
+    const key = db.ref("withdrawal_requests").push().key;
+    const record = {
+      id: key, userPhone, userName: user.name || "",
+      amount, fee, netAmount: net,
+      method: user.withdrawAccount.method || "bkash",
+      accountName: user.withdrawAccount.name || "",
+      accountNumber: user.withdrawAccount.number,
+      status: "পেন্ডিং",
+      createdAt: Date.now(),
+      date: new Date(Date.now() + 6 * 3600 * 1000).toISOString().slice(0, 10)
+    };
+    await db.ref().update({
+      [`withdrawal_requests/${key}`]: record,
+      [`users/${userPhone}/withdrawals/${key}`]: record
+    });
+    return res.json({ ok: true, id: key, newBalance: tx.snapshot.val() });
+  } catch (e) {
+    // রেকর্ড লেখা ব্যর্থ হলে কাটা টাকা ফেরত
+    if (deducted && userPhone) {
+      await db.ref(`users/${userPhone}/balance`)
+        .transaction(b => Number((Number(b || 0) + deducted).toFixed(2)))
+        .catch(() => {});
+    }
+    console.error("withdraw error:", e);
+    return res.status(500).json({ message: "উত্তোলন জমা হয়নি, আবার চেষ্টা করুন" });
+  }
+});
+
+// ---------------- Admin: উত্তোলন Approve / Reject ----------------
+function isAdmin(req) {
+  return !!ADMIN_SECRET && safeEq(String(req.headers["x-admin-secret"] || ""), ADMIN_SECRET);
+}
+
+app.post("/api/admin/withdraw/decide", async (req, res) => {
+  if (!isAdmin(req)) return res.status(401).json({ message: "অনুমতি নেই" });
+  const id = String(req.body.id || "");
+  const decision = String(req.body.decision || "");
+  const note = String(req.body.note || "");
+  if (!id || !["approve", "reject"].includes(decision)) {
+    return res.status(400).json({ message: "id ও decision (approve/reject) দিন" });
+  }
+  try {
+    const reqRef = db.ref(`withdrawal_requests/${id}`);
+    const rec = (await reqRef.once("value")).val();
+    if (!rec) return res.status(404).json({ message: "রিকোয়েস্ট পাওয়া যায়নি" });
+
+    const newStatus = decision === "approve" ? "সফল" : "বাতিল";
+    // ডাবল প্রসেস ঠেকাতে: শুধু পেন্ডিং থেকে বদলাবে
+    const claim = await reqRef.child("status").transaction(cur =>
+      cur === "পেন্ডিং" ? newStatus : undefined
+    );
+    if (!claim.committed) return res.status(400).json({ message: "ইতিমধ্যে প্রসেস হয়েছে" });
+
+    await db.ref().update({
+      [`withdrawal_requests/${id}/processedAt`]: Date.now(),
+      [`withdrawal_requests/${id}/note`]: note,
+      [`users/${rec.userPhone}/withdrawals/${id}/status`]: newStatus,
+      [`users/${rec.userPhone}/withdrawals/${id}/processedAt`]: Date.now()
+    });
+
+    // Reject হলে কাটা টাকা ফেরত
+    if (decision === "reject") {
+      await db.ref(`users/${rec.userPhone}/balance`).transaction(b =>
+        Number((Number(b || 0) + Number(rec.amount)).toFixed(2))
+      );
+    }
+    return res.json({ ok: true, status: newStatus });
+  } catch (e) {
+    console.error("decide error:", e);
+    return res.status(500).json({ message: "সমস্যা হয়েছে" });
+  }
+});
+
+app.get("/health", (_req, res) => res.json({
+  ok: true, service: "SPL User Backend", paymentGateway: "NEKpay", adapterReady: !!API_SECRET
+}));
+
 app.listen(PORT, () => {
   console.log(`SPL User Backend listening on ${PORT}`);
   processAllDueEarnings();
